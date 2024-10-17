@@ -1,6 +1,6 @@
 package at.technikum.springrestbackend.controller;
 
-import at.technikum.springrestbackend.service.AdminService;
+import at.technikum.springrestbackend.services.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
