@@ -46,4 +46,11 @@ public class JwtService {
     private boolean isTokenExpired(String token) {
         return extractClaims(token).getExpiration().before(new Date());
     }
+
+    public boolean extractIsAdmin(String token) {
+        Claims claims = extractClaims(token);
+        // Annahme: Das JWT enthält ein Claim namens "isAdmin", das einen Boolean-Wert speichert
+        return claims.get("isAdmin", Boolean.class);
+    }
+
 }
