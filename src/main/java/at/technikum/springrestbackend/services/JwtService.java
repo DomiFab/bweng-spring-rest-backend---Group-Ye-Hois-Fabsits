@@ -12,7 +12,7 @@ import java.util.Map;
 @Service
 public class JwtService {
 
-    private String SECRET_KEY = "deinGeheimesSchluessel"; // Setze hier deinen geheimen Schlüssel
+    private String secretKey = "^[a-z][a-zA-Z0-9]*$"; // Setze hier deinen geheimen Schlüssel
 
 
     private String createToken(Map<String, Object> claims, String subject) {
@@ -21,13 +21,13 @@ public class JwtService {
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 100)) // 100 Stunden
-                .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
+                .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
     }
 
     public Claims extractClaims(String token) {
         return Jwts.parser()
-                .setSigningKey(SECRET_KEY)
+                .setSigningKey(secretKey)
                 .parseClaimsJws(token)
                 .getBody();
     }
