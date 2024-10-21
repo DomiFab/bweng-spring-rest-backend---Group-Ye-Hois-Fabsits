@@ -11,8 +11,8 @@ import java.util.Map;
 
 @Service
 public class JwtService {
-
-    private String secretKey = "^[a-z][a-zA-Z0-9]*$"; // Setze hier deinen geheimen Schlüssel
+    // Setze hier deinen geheimen Schlüssel
+    private String secretKey = "PreviousKeyWasTooShortSoNowIMakeUpWordsToMakeTheMethodShaddapAndAlsoProjectKitchenEFHY";
 
 
     private String createToken(Map<String, Object> claims, String subject) {
