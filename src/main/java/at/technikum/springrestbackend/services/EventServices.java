@@ -1,14 +1,13 @@
 package at.technikum.springrestbackend.services;
 
-
 import at.technikum.springrestbackend.dto.EventDTO;
 import at.technikum.springrestbackend.exception.EntityNotFoundException;
 import at.technikum.springrestbackend.mapper.EventMapper;
 import at.technikum.springrestbackend.model.EventModel;
 import at.technikum.springrestbackend.model.MediaModel;
 import at.technikum.springrestbackend.model.UserModel;
-import at.technikum.springrestbackend.repository.*;
-import jakarta.persistence.EntityExistsException;
+import at.technikum.springrestbackend.repository.EventRepository;
+import at.technikum.springrestbackend.repository.MediaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
@@ -18,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class EventServices {
@@ -41,31 +41,28 @@ public class EventServices {
         this.eventMapper = eventMapper;
     }
 
-
-    public boolean idExists(String id){
+    public boolean idExists(UUID id) {
         return eventRepository.existsById(id);
     }
 
-    public EventModel find(String id) {
+    public EventModel find(UUID id) {
         return eventRepository.findById(id)
-                .orElseThrow(() -> new EntityExistsException("Event not found with id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Event not found with id: " + id));
     }
 
-    public List<EventModel> findAll (){
+    public List<EventModel> findAll() {
         return eventRepository.findAll();
     }
 
-    public EventModel save(EventModel eventModel){
+    public EventModel save(EventModel eventModel) {
         return eventRepository.save(eventModel);
     }
 
-    public EventModel update(String id, EventDTO updatedEventDTO, List<MultipartFile> files, String userName) {
-
-        //catching the case when an entity with the id does not exist
+    public EventModel update(UUID id, EventDTO updatedEventDTO, List<MultipartFile> files, String userName) {
         if (!idExists(id)) {
             throw new EntityNotFoundException("Event with provided ID [" + id + "] not found.");
         }
-        //get the existing Event from the DB and THEN set new values
+
         EventModel updatedEvent = find(id);
 
         if (!updatedEvent.getCreator().getUsername().equals(userName) &&
@@ -85,8 +82,7 @@ public class EventServices {
         return eventRepository.save(updatedEvent);
     }
 
-    //set isDeleted flag for SoftDelete
-    public EventModel delete(String eventID){
+    public EventModel delete(UUID eventID) {
         Optional<EventModel> eventOptional = eventRepository.findById(eventID);
 
         if (eventOptional.isPresent()) {
@@ -98,73 +94,55 @@ public class EventServices {
         }
     }
 
-    public EventModel deleteFinal(String eventID, String username) {
-        //find event by ID
+    public EventModel deleteFinal(UUID eventID, String username) {
         EventModel event = find(eventID);
         if (!event.getCreator().getUsername().equals(username) &&
                 !userServices.findByUsername(username).isAdmin()) {
-            throw new AccessDeniedException("You do not have permission to update this event.");
+            throw new AccessDeniedException("You do not have permission to delete this event.");
         }
         eventRepository.delete(event);
         return event;
     }
 
-    public EventModel addUserToEvent(String eventId, String userID) {
-        // Find the event by ID
+    public EventModel addUserToEvent(UUID eventId, UUID userID) {
         EventModel event = find(eventId);
-        // Find the user by ID
         UserModel user = userServices.find(userID);
 
-        // Add user to event's attending users
         event.getAttendingUsers().add(user);
-        // Add event to user's attending events
         user.getAttendingEvents().add(event);
 
-        // Save the updated event and user
         userServices.save(user);
         return save(event);
     }
 
-    public EventModel removeUserFromEvent(String eventID, String userID, String username){
-
-        // Find the event by ID
+    public EventModel removeUserFromEvent(UUID eventID, UUID userID, String username) {
         EventModel event = find(eventID);
-        // Find the user by ID
         UserModel user = userServices.find(userID);
 
         if (!event.getCreator().getUsername().equals(username) &&
                 !userServices.findByUsername(username).isAdmin()) {
-            throw new AccessDeniedException("You do not have permission to update this event.");
+            throw new AccessDeniedException("You do not have permission to remove users from this event.");
         }
 
-        // Add user to event's attending users
         event.getAttendingUsers().remove(user);
-        // Add event to user's attending events
         user.getAttendingEvents().remove(event);
 
-        // Save the updated event and user
         userServices.save(user);
         return save(event);
     }
 
-    public EventModel leaveEvent(String eventId, String userID) {
-        // Find the event by ID
+    public EventModel leaveEvent(UUID eventId, UUID userID) {
         EventModel event = find(eventId);
-        // Find the user by ID
         UserModel user = userServices.find(userID);
 
-        // Add user to event's attending users
         event.getAttendingUsers().remove(user);
-        // Add event to user's attending events
         user.getAttendingEvents().remove(event);
 
-        // Save the updated event and user
         userServices.save(user);
         return save(event);
     }
 
-
-    public boolean deletePictureFromGallery(String eventID, String mediaID, String userName){
+    public boolean deletePictureFromGallery(UUID eventID, UUID mediaID, String userName) {
         MediaModel media = mediaServices.findByEventAndMedia(mediaID, eventID);
         EventModel event = media.getEvent();
         boolean isAdmin = userServices.findByUsername(userName).isAdmin();
@@ -184,18 +162,13 @@ public class EventServices {
         return true;
     }
 
-    public EventDTO getEventDetails(String eventID){
+    public EventDTO getEventDetails(UUID eventID) {
         EventModel event = find(eventID);
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated()) {
-            // Return full DTO if authenticated
             return eventMapper.toFullDTO(event);
         } else {
-            // Return simple DTO if not authenticated
             return eventMapper.toSimpleDTO(event);
         }
     }
-
-
 }
-

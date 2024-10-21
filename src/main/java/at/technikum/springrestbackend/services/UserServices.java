@@ -13,6 +13,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class UserServices {
@@ -38,7 +39,7 @@ public class UserServices {
         return userRepository.findByEmail(email).isPresent();
     }
 
-    public UserModel find(Long id) {
+    public UserModel find(UUID id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
     }

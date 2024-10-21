@@ -5,9 +5,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 public class UserDTO {
-    private Long userID;
+    private UUID userID;
 
     @NotBlank
     @Size(min = 3, max = 50)
@@ -33,14 +34,14 @@ public class UserDTO {
     public UserDTO() {}
 
     // For login form
-    public UserDTO(Long userID, String username, String email) {
+    public UserDTO(UUID userID, String username, String email) {
         this.userID = userID;
         this.username = username;
         this.email = email;
     }
 
     // For event to display list of attending users
-    public UserDTO(Long userID, String username, String email, String profilePicture) {
+    public UserDTO(UUID userID, String username, String email, String profilePicture) {
         this.userID = userID;
         this.username = username;
         this.email = email;
@@ -48,7 +49,7 @@ public class UserDTO {
     }
 
     // Dashboard display with all uploaded media
-    public UserDTO(Long userID, String username, String email, String profileDescription, String profilePicture,
+    public UserDTO(UUID userID, String username, String email, String profileDescription, String profilePicture,
                    Set<EventDTO> attendingEvents, Set<EventDTO> createdEvents, Set<MediaDTO> uploadedMedia) {
         this.userID = userID;
         this.username = username;
@@ -61,7 +62,7 @@ public class UserDTO {
     }
 
     // Dashboard without any media
-    public UserDTO(Long userID, String username, String email, String profileDescription, String profilePicture,
+    public UserDTO(UUID userID, String username, String email, String profileDescription, String profilePicture,
                    Set<EventDTO> attendingEvents, Set<EventDTO> createdEvents) {
         this.userID = userID;
         this.username = username;
@@ -73,7 +74,7 @@ public class UserDTO {
     }
 
     // All-purpose use
-    public UserDTO(Long userID, String username, String password, String email, boolean isDeleted, boolean isAdmin,
+    public UserDTO(UUID userID, String username, String password, String email, boolean isDeleted, boolean isAdmin,
                    String profileDescription, String profilePicture, Set<EventDTO> attendingEvents,
                    Set<EventDTO> createdEvents, Set<ForumPostDTO> createdPosts, Set<ForumThreadDTO> createdComments,
                    Set<MediaDTO> uploadedMedia) {
@@ -94,11 +95,11 @@ public class UserDTO {
 
     // Getters and Setters
 
-    public Long getUserID() {
+    public UUID getUserID() {
         return userID;
     }
 
-    public void setUserID(Long userID) {
+    public void setUserID(UUID userID) {
         this.userID = userID;
     }
 

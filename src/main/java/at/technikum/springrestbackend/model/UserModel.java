@@ -6,14 +6,15 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
 public class UserModel {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long userID;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID userID;
 
     @NotBlank
     @Size(min = 3, max = 50)
@@ -51,18 +52,18 @@ public class UserModel {
     }
 
     public UserModel(String username, String password, String email) {
+        this.userID = UUID.randomUUID(); // Generate UUID
         this.username = username;
         this.password = password;
         this.email = email;
     }
 
     // Getters and Setters
-
-    public Long getUserID() {
+    public UUID getUserID() {
         return userID;
     }
 
-    public void setUserID(Long userID) {
+    public void setUserID(UUID userID) {
         this.userID = userID;
     }
 
@@ -81,6 +82,7 @@ public class UserModel {
     public void setPassword(String password) {
         this.password = password;
     }
+
     public String getEmail() {
         return email;
     }

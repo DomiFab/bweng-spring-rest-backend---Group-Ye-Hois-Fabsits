@@ -12,6 +12,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
 @Component
 public class EventMapper {
 
@@ -29,63 +31,81 @@ public class EventMapper {
         this.mediaMapper = mediaMapper;
     }
 
-    //creating event
+    // Creating event
     public EventModel toEntity(EventDTO eventDTO, UserModel creator) {
-        //DataBank entry requires the id as a primary key
-        return new EventModel(
-                UUID.randomUUID().toString(),
+        EventModel event = new EventModel(
                 creator,
                 eventDTO.getEventName(),
-                eventDTO.getEventLocation(), eventDTO.getEventDate(),
-                eventDTO.getEventShortDescription(),
-                eventDTO.getEventLongDescription(),
-                new HashSet<>()
+                eventDTO.getEventLocation(),
+                eventDTO.getEventShortDescription()
         );
+        event.setEventID(UUID.randomUUID()); // Generate UUID
+        return event;
     }
 
-    //display for unauthorized user and dashboard
+    // Display for unauthorized user and dashboard
     public EventDTO toSimpleDTO(EventModel eventModel) {
-        //creating a new DTO of Event to assign the values of the Entity to it
         return new EventDTO(
-                eventModel.getEventID(), eventModel.getEventName(),
+                eventModel.getEventID(),
+                eventModel.getEventName(),
                 eventModel.getEventLocation(),
-                eventModel.getEventDate(), eventModel.getEventShortDescription(),
+                eventModel.getEventDate(),
+                eventModel.getEventShortDescription(),
                 eventModel.getEventLongDescription(),
                 eventModel.isDeleted(),
                 userMapper.toSimpleDTO(eventModel.getCreator()),
                 mediaServices.getFrontPicture(eventModel.getGalleryPictures())
-                );
+        );
     }
 
-    //for full event page
+    // For full event page
     public EventDTO toFullDTO(EventModel eventModel) {
-
-
         EventDTO displayedEvent = new EventDTO();
-        for (ForumPostModel post : eventModel.getEventPosts()){
-            displayedEvent.getEventPosts().add(forumPostMapper.toFullDTO(post));
-        }
-        for (UserModel user : eventModel.getAttendingUsers()){
-            displayedEvent.getAttendingUsers().add(new UserDTO(
-                    user.getUserID(), user.getUsername(),
-                    user.getEmail(), user.getProfilePicture()
-                    )
-            );
-        }
-        for (MediaModel media : eventModel.getGalleryPictures()){
-            displayedEvent.getGalleryPictures().add(mediaMapper.toSimpleDTO(media));
-        }
+        displayedEvent.setEventPosts(eventModel.getEventPosts().stream()
+                .map(forumPostMapper::toFullDTO)
+                .collect(Collectors.toSet()));
+        displayedEvent.setAttendingUsers(eventModel.getAttendingUsers().stream()
+                .map(user -> new UserDTO(user.getUserID(), user.getUsername(), user.getEmail(), user.getProfilePicture()))
+                .collect(Collectors.toSet()));
+        displayedEvent.setGalleryPictures(eventModel.getGalleryPictures().stream()
+                .map(mediaMapper::toSimpleDTO)
+                .collect(Collectors.toSet()));
 
         return new EventDTO(
-                eventModel.getEventID(), eventModel.getEventName(),
+                eventModel.getEventID(),
+                eventModel.getEventName(),
                 eventModel.getEventLocation(),
-                eventModel.getEventDate(), eventModel.getEventShortDescription(),
-                eventModel.getEventLongDescription(), eventModel.isDeleted(),
+                eventModel.getEventDate(),
+                eventModel.getEventShortDescription(),
+                eventModel.getEventLongDescription(),
+                eventModel.isDeleted(),
                 userMapper.toSimpleDTO(eventModel.getCreator()),
-                displayedEvent.getAttendingUsers(), displayedEvent.getGalleryPictures(),
+                displayedEvent.getAttendingUsers(),
+                displayedEvent.getGalleryPictures(),
                 displayedEvent.getEventPosts()
         );
     }
 
-
+    // General method to convert EventModel to EventDTO
+    public EventDTO toDTO(EventModel eventModel) {
+        return new EventDTO(
+                eventModel.getEventID(),
+                eventModel.getEventName(),
+                eventModel.getEventLocation(),
+                eventModel.getEventDate(),
+                eventModel.getEventShortDescription(),
+                eventModel.getEventLongDescription(),
+                eventModel.isDeleted(),
+                userMapper.toSimpleDTO(eventModel.getCreator()),
+                eventModel.getAttendingUsers().stream()
+                        .map(user -> new UserDTO(user.getUserID(), user.getUsername(), user.getEmail(), user.getProfilePicture()))
+                        .collect(Collectors.toSet()),
+                eventModel.getGalleryPictures().stream()
+                        .map(mediaMapper::toSimpleDTO)
+                        .collect(Collectors.toSet()),
+                eventModel.getEventPosts().stream()
+                        .map(forumPostMapper::toFullDTO)
+                        .collect(Collectors.toSet())
+        );
+    }
 }

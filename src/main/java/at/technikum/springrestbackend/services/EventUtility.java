@@ -20,9 +20,11 @@ public class EventUtility {
 
     public EventDTO convertToDTO(EventModel event) {
         return new EventDTO(
-                event.getEventID(), event.getEventName(),
+                event.getEventID(),
+                event.getEventName(),
                 event.getEventLocation(),
-                event.getEventDate(), event.getEventShortDescription(),
+                event.getEventDate(),
+                event.getEventShortDescription(),
                 event.getEventLongDescription(),
                 event.isDeleted(),
                 userMapper.toSimpleDTO(event.getCreator()),

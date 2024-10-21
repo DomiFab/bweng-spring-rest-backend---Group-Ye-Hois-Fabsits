@@ -2,32 +2,39 @@ package at.technikum.springrestbackend.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
-@Table (name="events")
+@Table(name = "events")
 public class EventModel {
 
-    @Positive
     @Id
-    private String eventID;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID eventID;
+
     @NotBlank
     private String eventName;
+
     @NotBlank
     private String eventLocation;
+
+    private ZonedDateTime eventDate; // Optional, can be null initially
+
     @NotBlank
-    private ZonedDateTime eventDate; // or LocalDateTime without TimeZone
     private String eventShortDescription;
+
     private String eventLongDescription;
-    // Soft-Delete-Attribute in case deletion was an accident
+
+    // Soft-Delete attribute in case deletion was an accident
     private boolean isDeleted = false;
-    @NotBlank
+
     @ManyToOne
-    @JoinColumn(name = "fk_creator") //foreign key
+    @JoinColumn(name = "fk_creator", nullable = false) // Foreign key
     private UserModel creator;
+
     @ManyToMany
     @JoinTable(
             name = "event_users",
@@ -35,48 +42,31 @@ public class EventModel {
             inverseJoinColumns = @JoinColumn(name = "fk_user")
     )
     private Set<UserModel> attendingUsers = new HashSet<>();
+
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<MediaModel> galleryPictures = new HashSet<>();
+
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ForumPostModel> eventPosts = new HashSet<>();
 
-    // Constructor
+    // Constructors
     public EventModel() {
     }
 
-    public EventModel(String eventId, UserModel creator, String eventName, String eventLocation,
-                      ZonedDateTime eventDate, String eventShortDescription, String eventLongDescription,
-                      Set<MediaModel> galleryPictures) {
-        this.eventID = eventId;
+    public EventModel(UserModel creator, String eventName, String eventLocation, String eventShortDescription) {
+        this.eventID = UUID.randomUUID(); // Generate UUID
         this.creator = creator;
         this.eventName = eventName;
         this.eventLocation = eventLocation;
-        this.eventDate = eventDate;
         this.eventShortDescription = eventShortDescription;
-        this.eventLongDescription = eventLongDescription;
-        this.galleryPictures = galleryPictures;
     }
 
-    public EventModel(String eventID, UserModel creator, Set<UserModel> userIDs, Set<MediaModel> galleryPictures,
-                      Set<ForumPostModel> eventPosts, String eventName, String eventLocation,
-                      ZonedDateTime eventDate, String eventShortDescription, String eventLongDescription) {
-        this.eventID = eventID;
-        this.creator = creator;
-        this.attendingUsers = userIDs;
-        this.galleryPictures = galleryPictures;
-        this.eventPosts = eventPosts;
-        this.eventName = eventName;
-        this.eventLocation = eventLocation;
-        this.eventDate = eventDate;
-        this.eventShortDescription = eventShortDescription;
-        this.eventLongDescription = eventLongDescription;
-    }
-
-    public String getEventID() {
+    // Getters and Setters
+    public UUID getEventID() {
         return eventID;
     }
 
-    public void setEventID(String eventID) {
+    public void setEventID(UUID eventID) {
         this.eventID = eventID;
     }
 
