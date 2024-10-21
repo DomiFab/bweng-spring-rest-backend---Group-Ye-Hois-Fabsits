@@ -6,8 +6,11 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends ListCrudRepository<UserModel, String> {
+public interface UserRepository extends ListCrudRepository<UserModel, Long> {
+
     Optional<UserModel> findByUsername(String username);
+
+    Optional<UserModel> findByEmail(String email);
 
     // Methode zum Deaktivieren (löschen) eines Benutzers (setzt isDeleted auf true)
     default void softDeleteUser(UserModel user) {
@@ -20,5 +23,4 @@ public interface UserRepository extends ListCrudRepository<UserModel, String> {
         user.setDeleted(false);
         save(user);
     }
-    Optional<UserModel> findByEmail(String email);
 }

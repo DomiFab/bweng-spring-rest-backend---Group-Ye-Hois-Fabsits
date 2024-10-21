@@ -1,49 +1,54 @@
 package at.technikum.springrestbackend.dto;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-
+import jakarta.validation.constraints.Size;
 import java.util.HashSet;
 import java.util.Set;
 
-
 public class UserDTO {
-    private String userID;
+    private Long userID;
+
     @NotBlank
+    @Size(min = 3, max = 50)
     private String username;
+
     private String password;
+
     @NotBlank
+    @Email
     private String email;
-    // Zusätzliche Attribute für Soft-Delete und Admin
-    private boolean isDeleted = false;  // Hinzugefügt: Kennzeichnet, ob der Benutzer gelöscht ist
+
+    private boolean isDeleted = false;
     private boolean isAdmin = false;
     private String profileDescription;
     private String profilePicture;
+
     private Set<EventDTO> attendingEvents = new HashSet<>();
     private Set<EventDTO> createdEvents = new HashSet<>();
     private Set<ForumPostDTO> createdPosts = new HashSet<>();
     private Set<ForumThreadDTO> createdComments = new HashSet<>();
     private Set<MediaDTO> uploadedMedia = new HashSet<>();
 
-    public UserDTO() {
-    }
+    public UserDTO() {}
 
-    //for login form
-    public UserDTO(String userID, String username, String email) {
+    // For login form
+    public UserDTO(Long userID, String username, String email) {
         this.userID = userID;
         this.username = username;
         this.email = email;
     }
 
-    //for event to display list of attending users
-    public UserDTO(String userID, String username, String email, String profilePicture) {
+    // For event to display list of attending users
+    public UserDTO(Long userID, String username, String email, String profilePicture) {
         this.userID = userID;
         this.username = username;
         this.email = email;
         this.profilePicture = profilePicture;
     }
 
-    //dashboard display with all uploaded Media
-    public UserDTO(String userID, String username, String email, String profileDescription, String profilePicture,
+    // Dashboard display with all uploaded media
+    public UserDTO(Long userID, String username, String email, String profileDescription, String profilePicture,
                    Set<EventDTO> attendingEvents, Set<EventDTO> createdEvents, Set<MediaDTO> uploadedMedia) {
         this.userID = userID;
         this.username = username;
@@ -55,8 +60,8 @@ public class UserDTO {
         this.uploadedMedia = uploadedMedia;
     }
 
-    //dashboard without any Media
-    public UserDTO(String userID, String username, String email, String profileDescription, String profilePicture,
+    // Dashboard without any media
+    public UserDTO(Long userID, String username, String email, String profileDescription, String profilePicture,
                    Set<EventDTO> attendingEvents, Set<EventDTO> createdEvents) {
         this.userID = userID;
         this.username = username;
@@ -67,8 +72,8 @@ public class UserDTO {
         this.createdEvents = createdEvents;
     }
 
-    //all-purpose use
-    public UserDTO(String userID, String username, String password, String email, boolean isDeleted, boolean isAdmin,
+    // All-purpose use
+    public UserDTO(Long userID, String username, String password, String email, boolean isDeleted, boolean isAdmin,
                    String profileDescription, String profilePicture, Set<EventDTO> attendingEvents,
                    Set<EventDTO> createdEvents, Set<ForumPostDTO> createdPosts, Set<ForumThreadDTO> createdComments,
                    Set<MediaDTO> uploadedMedia) {
@@ -87,11 +92,13 @@ public class UserDTO {
         this.uploadedMedia = uploadedMedia;
     }
 
-    public String getUserID() {
+    // Getters and Setters
+
+    public Long getUserID() {
         return userID;
     }
 
-    public void setUserID(String userID) {
+    public void setUserID(Long userID) {
         this.userID = userID;
     }
 
@@ -123,16 +130,16 @@ public class UserDTO {
         return isDeleted;
     }
 
-    public void setDeleted(boolean deleted) {
-        isDeleted = deleted;
+    public void setDeleted(boolean isDeleted) {
+        this.isDeleted = isDeleted;
     }
 
     public boolean isAdmin() {
         return isAdmin;
     }
 
-    public void setAdmin(boolean admin) {
-        isAdmin = admin;
+    public void setAdmin(boolean isAdmin) {
+        this.isAdmin = isAdmin;
     }
 
     public String getProfileDescription() {

@@ -26,7 +26,7 @@ public class UserServices {
         this.userMapper = userMapper;
     }
 
-    public boolean idExists(String id){
+    public boolean idExists(Long id) {
         return userRepository.existsById(id);
     }
 
@@ -38,9 +38,9 @@ public class UserServices {
         return userRepository.findByEmail(email).isPresent();
     }
 
-    public UserModel find(String id) {
+    public UserModel find(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new EntityExistsException("User not found with id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
     }
 
     public UserModel findByUsername(String username) {
@@ -48,15 +48,15 @@ public class UserServices {
                 .orElseThrow(() -> new EntityNotFoundException("User not found with username: " + username));
     }
 
-    public List<UserModel> findAll (){
+    public List<UserModel> findAll() {
         return userRepository.findAll();
     }
 
-    public UserModel save(UserModel userModel){
+    public UserModel save(UserModel userModel) {
         return userRepository.save(userModel);
     }
 
-    public UserModel saveComment(UserModel user, List<MediaModel> mediaList, ForumThreadModel comment){
+    public UserModel saveComment(UserModel user, List<MediaModel> mediaList, ForumThreadModel comment) {
         user.getCreatedComments().add(comment);
         user.getUploadedMedia().addAll(mediaList);
         return save(user);
@@ -77,17 +77,15 @@ public class UserServices {
         return userMapper.toSimpleDTO(newUser);
     }
 
-    public UserModel update(String userID, UserDTO updatedUserDTO, String username){
-
-        //catching the case when an entity with the id does not exist
-        if (!idExists(userID)){
+    public UserModel update(Long userID, UserDTO updatedUserDTO, String username) {
+        // Catching the case when an entity with the id does not exist
+        if (!idExists(userID)) {
             throw new EntityNotFoundException("User with provided ID [" + userID + "] not found.");
         }
 
         UserModel user = find(userID);
 
-        if (!user.getUsername().equals(username) &&
-                !findByUsername(username).isAdmin()) {
+        if (!user.getUsername().equals(username) && !findByUsername(username).isAdmin()) {
             throw new AccessDeniedException("You do not have permission to update this user.");
         }
 
@@ -104,14 +102,12 @@ public class UserServices {
         return userRepository.save(user);
     }
 
-    public UserModel delete(String userID, String username){
+    public UserModel delete(Long userID, String username) {
         UserModel user = find(userID);
-        if (!user.getUsername().equals(username) &&
-                !findByUsername(username).isAdmin()) {
-            throw new AccessDeniedException("You do not have permission to update this user.");
+        if (!user.getUsername().equals(username) && !findByUsername(username).isAdmin()) {
+            throw new AccessDeniedException("You do not have permission to delete this user.");
         }
         userRepository.delete(user);
         return user;
     }
-
 }

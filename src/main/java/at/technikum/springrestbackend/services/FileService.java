@@ -108,7 +108,7 @@ public class FileService {
     }
 
 
-    public String uploadProfilePicture(String userID, MultipartFile file, String authUser) {
+    public String uploadProfilePicture(Long userID, MultipartFile file, String authUser) {
         // Validate the input file
         if (file.isEmpty()) {
             throw new IllegalArgumentException("File must not be empty.");

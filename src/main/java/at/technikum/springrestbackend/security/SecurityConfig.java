@@ -49,8 +49,8 @@ public class SecurityConfig {
                         // limiting access without authentication to register, login and view event page
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/events/{eventId}").permitAll()
-                        //border patrol for admin only pages
-                        .requestMatchers("/admin/**").hasAuthority("isAdmin")
+                        // border patrol for admin only pages
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         // allow errors so that @ResponseStatus() will show and not 401
                         .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated());
@@ -61,4 +61,3 @@ public class SecurityConfig {
         return http.build();
     }
 }
-
