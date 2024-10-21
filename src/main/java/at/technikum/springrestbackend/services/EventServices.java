@@ -1,28 +1,46 @@
 package at.technikum.springrestbackend.services;
 
+
 import at.technikum.springrestbackend.dto.EventDTO;
 import at.technikum.springrestbackend.exception.EntityNotFoundException;
+import at.technikum.springrestbackend.mapper.EventMapper;
 import at.technikum.springrestbackend.model.EventModel;
-import at.technikum.springrestbackend.repository.EventRepository;
+import at.technikum.springrestbackend.model.MediaModel;
+import at.technikum.springrestbackend.model.UserModel;
+import at.technikum.springrestbackend.repository.*;
 import jakarta.persistence.EntityExistsException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-//import org.springframework.util.StringUtils;
-//import org.springframework.web.multipart.MultipartFile;
-//
-//import java.io.IOException;
-//import java.nio.file.Files;
-//import java.nio.file.Path;
-//import java.nio.file.Paths;
-//import java.nio.file.StandardCopyOption;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class EventServices {
     private final EventRepository eventRepository;
+    private final MediaRepository mediaRepository;
+    private final FileService fileService;
+    private final UserServices userServices;
+    private final MediaServices mediaServices;
+    private final EventMapper eventMapper;
 
-    public EventServices(EventRepository eventRepository) {
+    @Autowired
+    public EventServices(EventRepository eventRepository,
+                         MediaRepository mediaRepository,
+                         FileService fileService, UserServices userServices,
+                         MediaServices mediaServices, EventMapper eventMapper) {
         this.eventRepository = eventRepository;
+        this.mediaRepository = mediaRepository;
+        this.fileService = fileService;
+        this.userServices = userServices;
+        this.mediaServices = mediaServices;
+        this.eventMapper = eventMapper;
     }
+
 
     public boolean idExists(String id){
         return eventRepository.existsById(id);
@@ -33,55 +51,151 @@ public class EventServices {
                 .orElseThrow(() -> new EntityExistsException("Event not found with id: " + id));
     }
 
-    public EventModel update(String id, EventDTO eventDTOupdate) {
+    public List<EventModel> findAll (){
+        return eventRepository.findAll();
+    }
+
+    public EventModel save(EventModel eventModel){
+        return eventRepository.save(eventModel);
+    }
+
+    public EventModel update(String id, EventDTO updatedEventDTO, List<MultipartFile> files, String userName) {
 
         //catching the case when an entity with the id does not exist
         if (!idExists(id)) {
             throw new EntityNotFoundException("Event with provided ID [" + id + "] not found.");
         }
         //get the existing Event from the DB and THEN set new values
-        EventModel existingEvent = eventRepository.findById(id).orElseThrow();
+        EventModel updatedEvent = find(id);
 
-        existingEvent.setAllEventEntity(
-                id,
-                eventDTOupdate.getCreator(),
-                eventDTOupdate.getEventName(),
-                eventDTOupdate.getEventPicture(),
-                eventDTOupdate.getEventLocation(),
-                eventDTOupdate.getEventDate(),
-                eventDTOupdate.getEventShortDescription(),
-                eventDTOupdate.getEventLongDescription());
+        if (!updatedEvent.getCreator().getUsername().equals(userName) &&
+                !userServices.findByUsername(userName).isAdmin()) {
+            throw new AccessDeniedException("You do not have permission to update this event.");
+        }
 
-        return eventRepository.save(existingEvent);
+        updatedEvent.setEventName(updatedEventDTO.getEventName());
+        updatedEvent.setEventLocation(updatedEventDTO.getEventLocation());
+        updatedEvent.setEventDate(updatedEventDTO.getEventDate());
+        updatedEvent.setEventShortDescription(updatedEventDTO.getEventShortDescription());
+        updatedEvent.setEventLongDescription(updatedEventDTO.getEventLongDescription());
+
+        List<MediaModel> mediaList = fileService.updateFrontPicture(files, updatedEvent);
+        updatedEvent.getGalleryPictures().addAll(mediaList);
+
+        return eventRepository.save(updatedEvent);
     }
 
-    public List<EventModel> findAll (){
-        return eventRepository.findAll();
+    //set isDeleted flag for SoftDelete
+    public EventModel delete(String eventID){
+        Optional<EventModel> eventOptional = eventRepository.findById(eventID);
+
+        if (eventOptional.isPresent()) {
+            EventModel event = eventOptional.get();
+            eventRepository.softDeleteEvent(event);
+            return event;
+        } else {
+            throw new RuntimeException("Event not found with ID: " + eventID);
+        }
     }
-    public EventModel save(EventModel eventModel){
-        return eventRepository.save(eventModel);
+
+    public EventModel deleteFinal(String eventID, String username) {
+        //find event by ID
+        EventModel event = find(eventID);
+        if (!event.getCreator().getUsername().equals(username) &&
+                !userServices.findByUsername(username).isAdmin()) {
+            throw new AccessDeniedException("You do not have permission to update this event.");
+        }
+        eventRepository.delete(event);
+        return event;
     }
-    //EventProfilePicture upload logic with Exceptions
-//    public void uploadEventProfilePicture(String eventId, MultipartFile file) throws IOException {
-//        EventModel event = eventRepository.findById(eventId).orElseThrow(() -> new IllegalArgumentException("Event not found"));
-//        String fileName = StringUtils.cleanPath(file.getOriginalFilename());
-//        String uploadDir = "/event-pictures/";
-//        String filePath = uploadDir + eventId + "/" + fileName;
-//
-//        Path uploadPath = Paths.get(uploadDir + eventId);
-//        if (!Files.exists(uploadPath)) {
-//            Files.createDirectories(uploadPath);
-//        }
-//
-//        // Copy the file to the target location
-//        Files.copy(file.getInputStream(), Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
-//
-//        // Set the file path in the event model
-//        event.setEventPicture(filePath);
-//
-//        // Save the updated event model
-//        eventRepository.save(event);
-//    }
+
+    public EventModel addUserToEvent(String eventId, String userID) {
+        // Find the event by ID
+        EventModel event = find(eventId);
+        // Find the user by ID
+        UserModel user = userServices.find(userID);
+
+        // Add user to event's attending users
+        event.getAttendingUsers().add(user);
+        // Add event to user's attending events
+        user.getAttendingEvents().add(event);
+
+        // Save the updated event and user
+        userServices.save(user);
+        return save(event);
+    }
+
+    public EventModel removeUserFromEvent(String eventID, String userID, String username){
+
+        // Find the event by ID
+        EventModel event = find(eventID);
+        // Find the user by ID
+        UserModel user = userServices.find(userID);
+
+        if (!event.getCreator().getUsername().equals(username) &&
+                !userServices.findByUsername(username).isAdmin()) {
+            throw new AccessDeniedException("You do not have permission to update this event.");
+        }
+
+        // Add user to event's attending users
+        event.getAttendingUsers().remove(user);
+        // Add event to user's attending events
+        user.getAttendingEvents().remove(event);
+
+        // Save the updated event and user
+        userServices.save(user);
+        return save(event);
+    }
+
+    public EventModel leaveEvent(String eventId, String userID) {
+        // Find the event by ID
+        EventModel event = find(eventId);
+        // Find the user by ID
+        UserModel user = userServices.find(userID);
+
+        // Add user to event's attending users
+        event.getAttendingUsers().remove(user);
+        // Add event to user's attending events
+        user.getAttendingEvents().remove(event);
+
+        // Save the updated event and user
+        userServices.save(user);
+        return save(event);
+    }
+
+
+    public boolean deletePictureFromGallery(String eventID, String mediaID, String userName){
+        MediaModel media = mediaServices.findByEventAndMedia(mediaID, eventID);
+        EventModel event = media.getEvent();
+        boolean isAdmin = userServices.findByUsername(userName).isAdmin();
+
+        if (!media.getUploader().getUsername().equals(userName) &&
+                !event.getCreator().getUsername().equals(userName) &&
+                !isAdmin) {
+            return false; // Not authorized
+        }
+        UserModel user = userServices.findByUsername(userName);
+        user.getUploadedMedia().remove(media);
+        userServices.save(user);
+        event.getGalleryPictures().remove(media);
+        save(event);
+        fileService.deleteFile(media.getFileLocation());
+        mediaRepository.delete(media);
+        return true;
+    }
+
+    public EventDTO getEventDetails(String eventID){
+        EventModel event = find(eventID);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            // Return full DTO if authenticated
+            return eventMapper.toFullDTO(event);
+        } else {
+            // Return simple DTO if not authenticated
+            return eventMapper.toSimpleDTO(event);
+        }
+    }
+
 
 }
 

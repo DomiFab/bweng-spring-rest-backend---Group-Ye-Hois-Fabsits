@@ -1,10 +1,11 @@
 package at.technikum.springrestbackend.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table (name="events")
@@ -13,64 +14,64 @@ public class EventModel {
     @Positive
     @Id
     private String eventID;
+    @NotBlank
+    private String eventName;
+    @NotBlank
+    private String eventLocation;
+    @NotBlank
+    private ZonedDateTime eventDate; // or LocalDateTime without TimeZone
+    private String eventShortDescription;
+    private String eventLongDescription;
+    // Soft-Delete-Attribute in case deletion was an accident
+    private boolean isDeleted = false;
+    @NotBlank
     @ManyToOne
     @JoinColumn(name = "fk_creator") //foreign key
     private UserModel creator;
     @ManyToMany
     @JoinTable(
             name = "event_users",
-            joinColumns = @JoinColumn(name = "fk_event_user"),
-            inverseJoinColumns = @JoinColumn(name = "fk_user_event")
+            joinColumns = @JoinColumn(name = "fk_event"),
+            inverseJoinColumns = @JoinColumn(name = "fk_user")
     )
-    private List<UserModel> userIDs = new ArrayList<>();
-
-
-    @OneToMany(mappedBy = "event")
-    private List<MediaModel> galleryPictures = new ArrayList<>();
-
-    @OneToMany(mappedBy = "event")
-    private List<ForumPostModel> eventPosts = new ArrayList<>();
-
-    private String eventName;
-    private String eventPicture;
-    private String eventAdress;
-    private ZonedDateTime eventDate; // or LocalDateTime without TimeZone
-    private String eventShortDescription;
-    private String eventLongDescription;
-
-    // Soft-Delete-Attribut hinzufügen
-    private boolean isDeleted;
+    private Set<UserModel> attendingUsers = new HashSet<>();
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<MediaModel> galleryPictures = new HashSet<>();
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ForumPostModel> eventPosts = new HashSet<>();
 
     // Constructor
-    public EventModel() {}
+    public EventModel() {
+    }
 
-    public EventModel(String eventId, UserModel creator, String eventName, String eventPicture, String eventAdress,
-                      ZonedDateTime eventDate, String eventShortDescription, String eventLongDescription) {
+    public EventModel(String eventId, UserModel creator, String eventName, String eventLocation,
+                      ZonedDateTime eventDate, String eventShortDescription, String eventLongDescription,
+                      Set<MediaModel> galleryPictures) {
         this.eventID = eventId;
         this.creator = creator;
         this.eventName = eventName;
-        this.eventPicture = eventPicture;
-        this.eventAdress = eventAdress;
+        this.eventLocation = eventLocation;
         this.eventDate = eventDate;
         this.eventShortDescription = eventShortDescription;
         this.eventLongDescription = eventLongDescription;
-        this.isDeleted = false; // Standardwert ist false
+        this.galleryPictures = galleryPictures;
     }
 
-    public void setAllEventEntity(String eventId, UserModel user, String eventName, String eventPicture, String eventAdress,
-                                  ZonedDateTime eventDate, String eventShortDescription, String eventLongDescription) {
-        setEventID(eventId);
-        setCreator(user);
-        setEventName(eventName);
-        setEventPicture(eventPicture);
-        setEventAdress(eventAdress);
-        setEventDate(eventDate);
-        setEventShortDescription(eventShortDescription);
-        setEventLongDescription(eventLongDescription);
+    public EventModel(String eventID, UserModel creator, Set<UserModel> userIDs, Set<MediaModel> galleryPictures,
+                      Set<ForumPostModel> eventPosts, String eventName, String eventLocation,
+                      ZonedDateTime eventDate, String eventShortDescription, String eventLongDescription) {
+        this.eventID = eventID;
+        this.creator = creator;
+        this.attendingUsers = userIDs;
+        this.galleryPictures = galleryPictures;
+        this.eventPosts = eventPosts;
+        this.eventName = eventName;
+        this.eventLocation = eventLocation;
+        this.eventDate = eventDate;
+        this.eventShortDescription = eventShortDescription;
+        this.eventLongDescription = eventLongDescription;
     }
 
-
-    //Getter and Setter
     public String getEventID() {
         return eventID;
     }
@@ -87,6 +88,30 @@ public class EventModel {
         this.creator = creator;
     }
 
+    public Set<UserModel> getAttendingUsers() {
+        return attendingUsers;
+    }
+
+    public void setAttendingUsers(Set<UserModel> attendingUsers) {
+        this.attendingUsers = attendingUsers;
+    }
+
+    public Set<MediaModel> getGalleryPictures() {
+        return galleryPictures;
+    }
+
+    public void setGalleryPictures(Set<MediaModel> galleryPictures) {
+        this.galleryPictures = galleryPictures;
+    }
+
+    public Set<ForumPostModel> getEventPosts() {
+        return eventPosts;
+    }
+
+    public void setEventPosts(Set<ForumPostModel> eventPosts) {
+        this.eventPosts = eventPosts;
+    }
+
     public String getEventName() {
         return eventName;
     }
@@ -95,20 +120,12 @@ public class EventModel {
         this.eventName = eventName;
     }
 
-    public String getEventPicture() {
-        return eventPicture;
+    public String getEventLocation() {
+        return eventLocation;
     }
 
-    public void setEventPicture(String eventPicture) {
-        this.eventPicture = eventPicture;
-    }
-
-    public String getEventAdress() {
-        return eventAdress;
-    }
-
-    public void setEventAdress(String eventAdress) {
-        this.eventAdress = eventAdress;
+    public void setEventLocation(String eventLocation) {
+        this.eventLocation = eventLocation;
     }
 
     public ZonedDateTime getEventDate() {
@@ -133,30 +150,6 @@ public class EventModel {
 
     public void setEventLongDescription(String eventLongDescription) {
         this.eventLongDescription = eventLongDescription;
-    }
-
-    public List<UserModel> getAttendingUserIDs() {
-        return userIDs;
-    }
-
-    public void setUserIDs(List<UserModel> userIDs) {
-        this.userIDs = userIDs;
-    }
-
-    public List<ForumPostModel> getEventPosts() {
-        return eventPosts;
-    }
-
-    public void setEventPosts(List<ForumPostModel> eventPosts) {
-        this.eventPosts = eventPosts;
-    }
-
-    public List<MediaModel> getGalleryPictures() {
-        return galleryPictures;
-    }
-
-    public void setGalleryPictures(List<MediaModel> galleryPictures) {
-        this.galleryPictures = galleryPictures;
     }
 
     public boolean isDeleted() {

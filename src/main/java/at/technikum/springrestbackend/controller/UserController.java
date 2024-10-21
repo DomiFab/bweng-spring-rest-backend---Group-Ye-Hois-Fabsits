@@ -4,13 +4,15 @@ import at.technikum.springrestbackend.dto.UserDTO;
 import at.technikum.springrestbackend.mapper.UserMapper;
 import at.technikum.springrestbackend.model.UserModel;
 import at.technikum.springrestbackend.repository.UserRepository;
+import at.technikum.springrestbackend.security.SecurityUtil;
+import at.technikum.springrestbackend.services.FileService;
 import at.technikum.springrestbackend.services.UserServices;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/users")
@@ -19,6 +21,8 @@ public class UserController {
     private final UserMapper userMapper;
     private final UserServices userServices;
     private final UserRepository userRepository;
+    @Autowired
+    private FileService fileService;
     @Autowired
     public UserController(
                         UserMapper userMapper,
@@ -29,54 +33,42 @@ public class UserController {
         this.userServices = userServices;
         this.userRepository = userRepository;
     }
-    @GetMapping
-    @ResponseStatus(HttpStatus.OK)
-    public List<UserDTO> readAll() {
-        return userServices.findAll().stream()
-                .map(userMapper::toDTO)
-                .collect(Collectors.toList());
-    }
+
   
     @GetMapping("/{userId}")
     @ResponseStatus(HttpStatus.FOUND)
     public UserDTO read(@PathVariable String userId) {
         UserModel user = userServices.find(userId);
-        return userMapper.toDTO(user);
+        return userMapper.toFullDTO(user);
     }
-//
-//    @PostMapping()
-//    @ResponseStatus(HttpStatus.CREATED)
-//    public UserDTO create(@RequestBody @Valid UserDTO userDTO){
-//        UserModel user = userMapper.toEntity(userDTO);
-//        userServices.save(user);
-//        return userMapper.toDTO(user);
-//    }
 
     @PutMapping("/{userId}")
     @ResponseStatus(HttpStatus.OK)
     public UserDTO update(@PathVariable String userId, @RequestBody UserDTO updatedUserDTO){
 
-        //for update logic CTRL+LMB on 'update' - method call
-        return userMapper.toDTO(userServices.update(userId, updatedUserDTO));
+        String username = SecurityUtil.getCurrentUserName();
+        return userMapper.toFullDTO(userServices.update(userId, updatedUserDTO, username));
     }
+
+    @PutMapping(value = "/{userID}/media", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @ResponseStatus(HttpStatus.OK)
+    public UserDTO uploadProfilePicture(@PathVariable String userID,
+                                        @RequestPart("file")MultipartFile file){
+
+        String authUser = SecurityUtil.getCurrentUserName();
+        fileService.uploadProfilePicture(userID, file, authUser);
+        UserModel updatedUser = userServices.find(userID);
+        return userMapper.toFullDTO(updatedUser);
+    }
+
 
     @DeleteMapping("/{userId}")
     @ResponseStatus(HttpStatus.FOUND)
     public UserDTO delete(@PathVariable String userId){
-        UserDTO deletedUserDTO =
-                new UserDTO(
-                        userId,
-                        userServices.find(userId).getAttendingEvents(),
-                        userServices.find(userId).getUsername(),
-                        userServices.find(userId).getPassword(),
-                        userServices.find(userId).getEmail(),
-                        userServices.find(userId).getProfilePicture(),
-                        userServices.find(userId).getProfileDescription()
-                );
 
-        userServices.find(userId);
-        userRepository.deleteById(userId);
-        return deletedUserDTO;
+        String username = SecurityUtil.getCurrentUserName();
+        UserModel deletedUser = userServices.delete(userId, username);
+        return userMapper.toFullDTO(deletedUser);
     }
 
 }

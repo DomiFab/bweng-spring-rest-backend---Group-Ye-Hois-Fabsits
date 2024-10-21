@@ -3,14 +3,16 @@ package at.technikum.springrestbackend.model;
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
-@Table(name = "forumPosts")
+@Table(name = "forum_posts")
 public class ForumPostModel {
     @Id
     private String id;
     private String title;
+    private String content;
     @Valid
     @NotBlank
     @ManyToOne
@@ -18,78 +20,92 @@ public class ForumPostModel {
     private UserModel author;
     @NotBlank
     @ManyToOne
-    @JoinColumn(name = "fk_event_post")
+    @JoinColumn(name = "fk_event_to_post")
     private EventModel event;
-    @NotBlank
-    private String content;
-
-    //media attachments as URL, BLOB or filepath?
-    //List for multiple file upload
-    @ElementCollection
-    private List<String> mediaPlaceHolder;
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ForumThreadModel> comments = new HashSet<>();
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<MediaModel> media = new HashSet<>();
 
     public ForumPostModel() {
     }
 
-    public ForumPostModel(
-            String id,
-            String title,
-            UserModel author,
-            String content,
-            List<String> mediaPlaceHolder
-    ) {
+    //for creating post
+    public ForumPostModel(String id, String title, String content,
+                          UserModel author, EventModel event, Set<MediaModel> media) {
         this.id = id;
         this.title = title;
-        this.author = author;
         this.content = content;
-        this.mediaPlaceHolder = mediaPlaceHolder;
+        this.author = author;
+        this.event = event;
+        this.media = media;
     }
 
-    public void setAllEntity(String id, String title, UserModel author, String content, List<String> mediaPlaceHolder) {
+    //for displaying post
+    public ForumPostModel(String id, String title, String content, UserModel author, EventModel event,
+                          Set<ForumThreadModel> comments, Set<MediaModel> media) {
         this.id = id;
         this.title = title;
-        this.author = author;
         this.content = content;
-        this.mediaPlaceHolder = mediaPlaceHolder;
+        this.author = author;
+        this.event = event;
+        this.comments = comments;
+        this.media = media;
     }
 
     public String getId() {
         return id;
     }
 
-    public String getTitle() {
-        return title;
-    }
-
-    public UserModel getAuthor() {
-        return author;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public List<String> getMediaPlaceHolder() {
-        return mediaPlaceHolder;
-    }
-
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getTitle() {
+        return title;
     }
 
     public void setTitle(String title) {
         this.title = title;
     }
 
-    public void setAuthor(UserModel author) {
-        this.author = author;
+    public String getContent() {
+        return content;
     }
 
     public void setContent(String content) {
         this.content = content;
     }
 
-    public void setMediaPlaceHolder(List<String> mediaPlaceHolder) {
-        this.mediaPlaceHolder = mediaPlaceHolder;
+    public UserModel getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(UserModel author) {
+        this.author = author;
+    }
+
+    public EventModel getEvent() {
+        return event;
+    }
+
+    public void setEvent(EventModel event) {
+        this.event = event;
+    }
+
+    public Set<ForumThreadModel> getComments() {
+        return comments;
+    }
+
+    public void setComment(Set<ForumThreadModel> comments) {
+        this.comments = comments;
+    }
+
+    public Set<MediaModel> getMedia() {
+        return media;
+    }
+
+    public void setMedia(Set<MediaModel> media) {
+        this.media = media;
     }
 }

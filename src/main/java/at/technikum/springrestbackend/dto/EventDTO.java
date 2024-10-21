@@ -1,73 +1,90 @@
 package at.technikum.springrestbackend.dto;
 
-import at.technikum.springrestbackend.model.ForumPostModel;
-import at.technikum.springrestbackend.model.MediaModel;
-import at.technikum.springrestbackend.model.UserModel;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import java.time.ZonedDateTime;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 
 public class EventDTO {
 
     private String eventID;
-    @NotBlank
-    private UserModel creator;
-    private List<UserModel> attendingUsers;
-    private List<MediaModel> galleryPictures;
-    private List<ForumPostModel> eventPosts;
-    @NotBlank
     private String eventName;
     @NotBlank
-    private String eventPicture;
-    @NotBlank
-    @Valid
     private String eventLocation;
     @NotBlank
     private ZonedDateTime eventDate; // or LocalDateTime without TimeZone
-    @NotBlank
     private String eventShortDescription;
-    @NotBlank
     private String eventLongDescription;
+    // Soft-Delete-Attribute in case deletion was an accident
+    private boolean isDeleted = false;
+    @NotBlank
+    @Valid
+    private UserDTO creator;
+    private Set<UserDTO> attendingUsers = new HashSet<>();
+    private Set<MediaDTO> galleryPictures = new HashSet<>();
+    private Set<ForumPostDTO> eventPosts = new HashSet<>();
 
-    //Constructor
     public EventDTO(){
     }
 
-    public EventDTO(String eventId, List<UserModel> userIDs, List<MediaModel> pictures, List<ForumPostModel> eventPosts,
-                    UserModel creator, String eventName, String eventPicture, String eventAdress, ZonedDateTime eventDate,
-                    String eventShortDescription, String eventLongDescription) {
-        this.eventID = eventId;
-        this.creator = creator;
+    //bare bone event option
+    public EventDTO(String eventID, String eventName, String eventLocation, ZonedDateTime eventDate,
+                    boolean isDeleted, UserDTO creatorID) {
+        this.eventID = eventID;
         this.eventName = eventName;
-        this.eventPicture = eventPicture;
-        this.eventLocation = eventAdress;
+        this.eventLocation = eventLocation;
+        this.eventDate = eventDate;
+        this.isDeleted = isDeleted;
+        this.creator = creatorID;
+    }
+
+    //event display for (un)authorized users
+    public EventDTO(String eventID, String eventName, String eventLocation, ZonedDateTime eventDate,
+                    String eventShortDescription, String eventLongDescription, boolean isDeleted,
+                    UserDTO creatorID, Set<MediaDTO> galleryPictures) {
+        this.eventID = eventID;
+        this.eventName = eventName;
+        this.eventLocation = eventLocation;
         this.eventDate = eventDate;
         this.eventShortDescription = eventShortDescription;
         this.eventLongDescription = eventLongDescription;
-        this.attendingUsers = userIDs;
-        this.galleryPictures = pictures;
+        this.isDeleted = isDeleted;
+        this.creator = creatorID;
+        this.galleryPictures = galleryPictures; //only main picture needs to be displayed
+    }
+
+    public EventDTO(String eventID, String eventName, String eventLocation,
+                    ZonedDateTime eventDate, String eventShortDescription, String eventLongDescription,
+                    UserDTO creatorID) {
+        this.eventID = eventID;
+        this.eventName = eventName;
+        this.eventLocation = eventLocation;
+        this.eventDate = eventDate;
+        this.eventShortDescription = eventShortDescription;
+        this.eventLongDescription = eventLongDescription;
+        this.creator = creatorID;
+    }
+
+    //for full event details on event page
+    public EventDTO(String eventID, String eventName, String eventLocation,
+                    ZonedDateTime eventDate, String eventShortDescription, String eventLongDescription,
+                    boolean isDeleted, UserDTO creatorID, Set<UserDTO> attendingUsers,
+                    Set<MediaDTO> galleryPictures, Set<ForumPostDTO> eventPosts) {
+        this.eventID = eventID;
+        this.eventName = eventName;
+        this.eventLocation = eventLocation;
+        this.eventDate = eventDate;
+        this.eventShortDescription = eventShortDescription;
+        this.eventLongDescription = eventLongDescription;
+        this.isDeleted = isDeleted;
+        this.creator = creatorID;
+        this.attendingUsers = attendingUsers;
+        this.galleryPictures = galleryPictures;
         this.eventPosts = eventPosts;
     }
 
-    public void setAllEventDTO(String eventId, UserModel creator, String eventName, String eventPicture, String eventAdress,
-                                  ZonedDateTime eventDate, String eventShortDescription, String eventLongDescription,
-                                  List<UserModel> userIDs, List<MediaModel> pictures, List<ForumPostModel> eventPosts) {
-        setEventID(eventId);
-        setCreator(creator);
-        setEventName(eventName);
-        setEventPicture(eventPicture);
-        setEventLocation(eventAdress);
-        setEventDate(eventDate);
-        setEventShortDescription(eventShortDescription);
-        setEventLongDescription(eventLongDescription);
-        setEventPosts(eventPosts);
-        setGalleryPictures(pictures);
-        setAttendingUsers(userIDs);
-    }
-
-    //Getter and Setter
     public String getEventID() {
         return eventID;
     }
@@ -76,28 +93,12 @@ public class EventDTO {
         this.eventID = eventID;
     }
 
-    public UserModel getCreator() {
-        return creator;
-    }
-
-    public void setCreator(UserModel user) {
-        this.creator = user;
-    }
-
     public String getEventName() {
         return eventName;
     }
 
     public void setEventName(String eventName) {
         this.eventName = eventName;
-    }
-
-    public String getEventPicture() {
-        return eventPicture;
-    }
-
-    public void setEventPicture(String eventPicture) {
-        this.eventPicture = eventPicture;
     }
 
     public String getEventLocation() {
@@ -132,27 +133,43 @@ public class EventDTO {
         this.eventLongDescription = eventLongDescription;
     }
 
-    public List<UserModel> getAttendingUsers() {
+    public boolean isDeleted() {
+        return isDeleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        isDeleted = deleted;
+    }
+
+    public UserDTO getCreator() {
+        return creator;
+    }
+
+    public void setCreator(UserDTO creator) {
+        this.creator = creator;
+    }
+
+    public Set<UserDTO> getAttendingUsers() {
         return attendingUsers;
     }
 
-    public void setAttendingUsers(List<UserModel> attendingUsers) {
+    public void setAttendingUsers(Set<UserDTO> attendingUsers) {
         this.attendingUsers = attendingUsers;
     }
 
-    public List<MediaModel> getGalleryPictures() {
+    public Set<MediaDTO> getGalleryPictures() {
         return galleryPictures;
     }
 
-    public void setGalleryPictures(List<MediaModel> galleryPictures) {
+    public void setGalleryPictures(Set<MediaDTO> galleryPictures) {
         this.galleryPictures = galleryPictures;
     }
 
-    public List<ForumPostModel> getEventPosts() {
+    public Set<ForumPostDTO> getEventPosts() {
         return eventPosts;
     }
 
-    public void setEventPosts(List<ForumPostModel> eventPosts) {
+    public void setEventPosts(Set<ForumPostDTO> eventPosts) {
         this.eventPosts = eventPosts;
     }
 }

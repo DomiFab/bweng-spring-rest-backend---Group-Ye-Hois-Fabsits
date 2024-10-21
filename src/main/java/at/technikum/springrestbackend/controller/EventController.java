@@ -3,15 +3,22 @@ package at.technikum.springrestbackend.controller;
 import at.technikum.springrestbackend.dto.EventDTO;
 import at.technikum.springrestbackend.mapper.EventMapper;
 import at.technikum.springrestbackend.model.EventModel;
-import at.technikum.springrestbackend.repository.EventRepository;
+import at.technikum.springrestbackend.model.MediaModel;
+import at.technikum.springrestbackend.model.UserModel;
+import at.technikum.springrestbackend.security.SecurityUtil;
 import at.technikum.springrestbackend.services.EventServices;
+import at.technikum.springrestbackend.services.FileService;
+import at.technikum.springrestbackend.services.UserServices;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("/events")
 @CrossOrigin
@@ -19,79 +26,102 @@ public class EventController {
 
     private final EventMapper eventMapper;
     private final EventServices eventServices;
-    private final EventRepository eventRepository;
-
+    @Autowired
+    private FileService fileService;
+    @Autowired
+    private UserServices userServices;
 
     @Autowired
     public EventController(
             EventMapper eventMapper,
-            EventServices eventServices,
-            EventRepository eventRepository) {
+            EventServices eventServices) {
 
         this.eventMapper = eventMapper;
         this.eventServices = eventServices;
-        this.eventRepository = eventRepository;
-    }
-
-    //Event Routing Controllers
-
-    @GetMapping
-    @ResponseStatus(HttpStatus.OK)
-    public List<EventDTO> readAll() {
-        return eventServices.findAll().stream()
-                .map(eventMapper::toDTO)
-                .collect(Collectors.toList());
     }
 
     @GetMapping("/{eventId}")
     @ResponseStatus(HttpStatus.FOUND)
     public EventDTO read(@PathVariable String eventId) {
-        EventModel event = eventServices.find(eventId);
-        return eventMapper.toDTO(event);
+        return eventServices.getEventDetails(eventId);
     }
-    @PostMapping()
+
+    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     @ResponseStatus(HttpStatus.CREATED)
-    public EventDTO create(@RequestBody @Valid EventDTO eventDTO){
-        EventModel event = eventMapper.toEntity(eventDTO);
+    public EventDTO create(@RequestPart("eventData") @Valid EventDTO eventDTO,
+                           @RequestPart("files") List<MultipartFile> files) {
+        UserModel creator = userServices.find(eventDTO.getCreator().getUserID());
+        EventModel event = eventMapper.toEntity(eventDTO, creator);
+        String username = SecurityUtil.getCurrentUserName();
+        List<MediaModel> mediaList = fileService.handleCreateEventUpload(files, event, username);
+        event.getGalleryPictures().addAll(mediaList);
         eventServices.save(event);
-        return eventMapper.toDTO(event);
+        return eventMapper.toSimpleDTO(event);
     }
+
     @PutMapping("/{eventId}")
     @ResponseStatus(HttpStatus.OK)
-    public EventDTO update(@PathVariable String eventId, @RequestBody EventDTO updatedEventDTO){
+    public EventDTO update(
+            @PathVariable String eventId,
+            @RequestPart("eventData") @Valid EventDTO updatedEventDTO,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files) {
 
-        //for update logic CTRL+LMB on 'update' - method call
-        return eventMapper.toDTO(eventServices.update(eventId, updatedEventDTO));
+        String username = SecurityUtil.getCurrentUserName();
+        return eventMapper.toFullDTO(
+                eventServices.update(eventId, updatedEventDTO, files, username));
     }
 
     @DeleteMapping("/{eventId}")
-    @ResponseStatus(HttpStatus.FOUND)
+    @ResponseStatus(HttpStatus.OK)
     public EventDTO delete(@PathVariable String eventId){
-        EventDTO deletedEventDTO =
-                new EventDTO(
-                        eventId,
-                        eventServices.find(eventId).getAttendingUserIDs(),
-                        eventServices.find(eventId).getGalleryPictures(),
-                        eventServices.find(eventId).getEventPosts(),
-                        eventServices.find(eventId).getCreator(),
-                        eventServices.find(eventId).getEventName(),
-                        eventServices.find(eventId).getEventPicture(),
-                        eventServices.find(eventId).getEventAdress(),
-                        eventServices.find(eventId).getEventDate(),
-                        eventServices.find(eventId).getEventShortDescription(),
-                        eventServices.find(eventId).getEventLongDescription()
-
-                );
-        //Todo: event delete in service, controller to repository nix gut, delete with right userID
-        eventServices.find(eventId);
-        eventRepository.deleteById(eventId);
-        return deletedEventDTO;
+        String username = SecurityUtil.getCurrentUserName();
+        return eventMapper.toFullDTO(eventServices.deleteFinal(eventId, username));
     }
 
-    //TODO: Event Users Routing Controllers
+    @PutMapping("/{eventId}/addUser/{userID}")
+    @ResponseStatus(HttpStatus.OK)
+    public EventDTO addUserToEvent(@PathVariable String eventId, @PathVariable String userID) {
+        EventModel updatedEvent = eventServices.addUserToEvent(eventId, userID);
+        return eventMapper.toFullDTO(updatedEvent);
+    }
 
+    @PutMapping("/{eventId}/removeUser/{userId}")
+    @ResponseStatus(HttpStatus.OK)
+    public EventDTO removeUserFromEvent(@PathVariable String eventId, @PathVariable String userId) {
+        String userName = SecurityUtil.getCurrentUserName();
+        EventModel updatedEvent = eventServices.removeUserFromEvent(eventId, userId, userName);
+        return eventMapper.toFullDTO(updatedEvent);
+    }
 
-    //TODO: Event Media Routing Controllers
+    @PutMapping("/{eventId}/removeUser/")
+    @ResponseStatus(HttpStatus.OK)
+    public EventDTO leaveEvent(@PathVariable String eventId) {
+        String userName = SecurityUtil.getCurrentUserName();
+        EventModel updatedEvent = eventServices.leaveEvent(eventId, userName);
+        return eventMapper.toFullDTO(updatedEvent);
+    }
 
+    @PutMapping("/{eventId}/upload")
+    @ResponseStatus(HttpStatus.OK)
+    public EventDTO uploadGalleryPictures(@PathVariable String eventId,
+                                          @RequestParam("files") List<MultipartFile> files) {
+        EventModel event = eventServices.find(eventId);
+        String userName = SecurityUtil.getCurrentUserName();
+        List<MediaModel> mediaList = fileService.uploadMediaToEvent(files, eventId, userName);
+        event.getGalleryPictures().addAll(mediaList);
+        eventServices.save(event);
+        return eventMapper.toFullDTO(event);
+    }
+
+    @DeleteMapping("/{eventId}/gallery/{mediaId}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<String> deletePictureFromGallery(@PathVariable String eventId,
+                                                           @PathVariable String mediaId) {
+        String currentUserName = SecurityUtil.getCurrentUserName();
+        boolean isDeleted = eventServices.deletePictureFromGallery(eventId, mediaId, currentUserName);
+        return isDeleted
+                ? ResponseEntity.ok("Picture deleted successfully.")
+                : ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authorized to delete this picture.");
+    }
 
 }

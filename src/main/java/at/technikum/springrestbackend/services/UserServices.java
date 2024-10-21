@@ -1,10 +1,15 @@
 package at.technikum.springrestbackend.services;
+
 import at.technikum.springrestbackend.dto.UserDTO;
 import at.technikum.springrestbackend.exception.EntityNotFoundException;
 import at.technikum.springrestbackend.mapper.UserMapper;
+import at.technikum.springrestbackend.model.ForumThreadModel;
+import at.technikum.springrestbackend.model.MediaModel;
 import at.technikum.springrestbackend.model.UserModel;
 import at.technikum.springrestbackend.repository.UserRepository;
 import jakarta.persistence.EntityExistsException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,10 +20,12 @@ public class UserServices {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
 
+    @Autowired
     public UserServices(UserRepository userRepository, UserMapper userMapper) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
     }
+
     public boolean idExists(String id){
         return userRepository.existsById(id);
     }
@@ -45,14 +52,14 @@ public class UserServices {
         return userRepository.findAll();
     }
 
-//    public List<UserModel> findAllUserOfEvent (Event event) {
-//        //TODO: list of users of a certain event
-//
-//        return userRepository.findAllById(event.getID);
-//    }
-
     public UserModel save(UserModel userModel){
         return userRepository.save(userModel);
+    }
+
+    public UserModel saveComment(UserModel user, List<MediaModel> mediaList, ForumThreadModel comment){
+        user.getCreatedComments().add(comment);
+        user.getUploadedMedia().addAll(mediaList);
+        return save(user);
     }
 
     public UserDTO registerUser(UserDTO userDTO) {
@@ -67,25 +74,44 @@ public class UserServices {
         // Convert DTO to entity and save the user
         UserModel newUser = userMapper.toEntity(userDTO);
         userRepository.save(newUser);
-        return userMapper.toDTO(newUser);
+        return userMapper.toSimpleDTO(newUser);
     }
 
-    public UserModel update(String id, UserDTO userDTOupdate){
+    public UserModel update(String userID, UserDTO updatedUserDTO, String username){
 
         //catching the case when an entity with the id does not exist
-        if (!idExists(id)){
-            throw new EntityNotFoundException("User with provided ID [" + id + "] not found.");
+        if (!idExists(userID)){
+            throw new EntityNotFoundException("User with provided ID [" + userID + "] not found.");
         }
 
-        //get the existing User from the DB and THEN set new values
-        UserModel existingUser = userRepository.findById(id).orElseThrow();
+        UserModel user = find(userID);
 
-        existingUser.setAttendingEvents(userDTOupdate.getAttendingEvents());
-        existingUser.setProfilePicture(userDTOupdate.getProfilePicture());
-        existingUser.setProfileDescription(userDTOupdate.getProfileDescription());
-        existingUser.setUsername(userDTOupdate.getUsername());
-        existingUser.setEmail(userDTOupdate.getEmail());
+        if (!user.getUsername().equals(username) &&
+                !findByUsername(username).isAdmin()) {
+            throw new AccessDeniedException("You do not have permission to update this user.");
+        }
 
-        return userRepository.save(existingUser);
+        user.setProfileDescription(updatedUserDTO.getProfileDescription());
+        if (usernameExists(updatedUserDTO.getUsername())) {
+            throw new EntityExistsException("Username already exists: " + updatedUserDTO.getUsername());
+        }
+        if (emailExists(updatedUserDTO.getEmail())) {
+            throw new EntityExistsException("Email already exists: " + updatedUserDTO.getEmail());
+        }
+        user.setUsername(updatedUserDTO.getUsername());
+        user.setEmail(updatedUserDTO.getEmail());
+
+        return userRepository.save(user);
     }
+
+    public UserModel delete(String userID, String username){
+        UserModel user = find(userID);
+        if (!user.getUsername().equals(username) &&
+                !findByUsername(username).isAdmin()) {
+            throw new AccessDeniedException("You do not have permission to update this user.");
+        }
+        userRepository.delete(user);
+        return user;
+    }
+
 }
