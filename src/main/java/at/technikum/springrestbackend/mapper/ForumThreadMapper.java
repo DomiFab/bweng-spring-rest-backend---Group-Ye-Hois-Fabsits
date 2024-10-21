@@ -2,9 +2,9 @@ package at.technikum.springrestbackend.mapper;
 
 import at.technikum.springrestbackend.dto.ForumThreadDTO;
 import at.technikum.springrestbackend.model.ForumThreadModel;
-import at.technikum.springrestbackend.services.ForumPostServices;
+import at.technikum.springrestbackend.repository.ForumPostRepository;
+import at.technikum.springrestbackend.repository.UserRepository;
 import at.technikum.springrestbackend.services.MediaServices;
-import at.technikum.springrestbackend.services.UserServices;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -15,9 +15,9 @@ import java.util.UUID;
 public class ForumThreadMapper {
 
     @Autowired
-    private UserServices userServices;
+    private UserRepository userRepository;
     @Autowired
-    private ForumPostServices postServices;
+    private ForumPostRepository postRepository;
     @Autowired
     private UserMapper userMapper;
     @Autowired
@@ -39,8 +39,10 @@ public class ForumThreadMapper {
         return new ForumThreadModel(
                 UUID.randomUUID().toString(),
                 commentDTO.getContent(),
-                userServices.find(commentDTO.getAuthor().getUserID()),
-                postServices.find(commentDTO.getPostID()),
+                userRepository.findById(commentDTO.getAuthor().getUserID())
+                        .orElseThrow(),
+                postRepository.findById(commentDTO.getPostID())
+                        .orElseThrow(),
                 new HashSet<>()
         );
     }

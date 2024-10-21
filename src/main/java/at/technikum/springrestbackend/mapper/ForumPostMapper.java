@@ -1,8 +1,9 @@
 package at.technikum.springrestbackend.mapper;
 
 import at.technikum.springrestbackend.dto.ForumPostDTO;
+import at.technikum.springrestbackend.exception.EntityNotFoundException;
 import at.technikum.springrestbackend.model.ForumPostModel;
-import at.technikum.springrestbackend.services.EventServices;
+import at.technikum.springrestbackend.repository.EventRepository;
 import at.technikum.springrestbackend.services.ForumThreadServices;
 import at.technikum.springrestbackend.services.MediaServices;
 import at.technikum.springrestbackend.services.UserServices;
@@ -16,7 +17,7 @@ import java.util.UUID;
 public class ForumPostMapper {
 
     @Autowired
-    private EventServices eventServices;
+    private EventRepository eventRepository;
     @Autowired
     private UserServices userServices;
     @Autowired
@@ -32,7 +33,8 @@ public class ForumPostMapper {
                 UUID.randomUUID().toString(),
                 forumPostDTO.getTitle(), forumPostDTO.getContent(),
                 userServices.find(forumPostDTO.getAuthorID().getUserID()),
-                eventServices.find(forumPostDTO.getEventID()),
+                eventRepository.findById(forumPostDTO.getEventID())
+                        .orElseThrow(() -> new EntityNotFoundException("Event not found")),
                 new HashSet<>()
         );
     }

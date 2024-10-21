@@ -2,6 +2,9 @@ package at.technikum.springrestbackend.services;
 
 import at.technikum.springrestbackend.exception.EntityNotFoundException;
 import at.technikum.springrestbackend.model.*;
+import at.technikum.springrestbackend.repository.EventRepository;
+import at.technikum.springrestbackend.repository.ForumPostRepository;
+import at.technikum.springrestbackend.repository.ForumThreadRepository;
 import at.technikum.springrestbackend.repository.MediaRepository;
 import io.minio.*;
 import io.minio.errors.MinioException;
@@ -25,11 +28,11 @@ public class FileService {
     @Autowired
     private UserServices userServices;
     @Autowired
-    private EventServices eventServices;
+    private EventRepository eventRepository;
     @Autowired
-    private ForumPostServices postServices;
+    private ForumPostRepository postRepository;
     @Autowired
-    private ForumThreadServices commentServices;
+    private ForumThreadRepository commentRepository;
 
     public FileService(@Value("${BUCKET_HOST}") String bucketHost,
                        @Value("${BUCKET_PORT}") int bucketPort,
@@ -151,10 +154,14 @@ public class FileService {
                 String fileName = UUID.randomUUID().toString();
                 String filePath = "/comment/uploads/" + fileName;
                 this.uploadFile(filePath, file.getInputStream(), file.getContentType());
-                MediaModel media = new MediaModel(fileName, filePath,
-                        eventServices.find(postServices
-                                .find(comment.getPost().getId()).getEvent().getEventID()),
-                        user, comment);
+
+                ForumPostModel post = postRepository.findById(comment.getPost().getId())
+                        .orElseThrow(() -> new EntityNotFoundException("No post found"));
+
+                EventModel event = eventRepository.findById(post.getEvent().getEventID())
+                        .orElseThrow(() -> new EntityNotFoundException("No event found"));
+
+                MediaModel media = new MediaModel(fileName, filePath, event, user, comment);
                 mediaRepository.save(media);
                 mediaList.add(media);
             } catch (Exception e) {
@@ -163,7 +170,7 @@ public class FileService {
         }
         comment.getMedia().addAll(mediaList);
         userServices.saveComment(user, mediaList, comment);
-        commentServices.save(comment);  // Save the updated comment with media
+        commentRepository.save(comment);  // Save the updated comment with media
         return mediaList;
     }
 
@@ -182,9 +189,13 @@ public class FileService {
                     String fileName = UUID.randomUUID().toString(); // Generate unique file name
                     String filePath = "/comment/uploads/" + fileName;
                     this.uploadFile(filePath, file.getInputStream(), file.getContentType());
-                    MediaModel newMedia = new MediaModel(fileName, filePath,
-                            eventServices.find(postServices.find(comment.getPost().getId()).getId()),
-                            comment.getAuthor(), comment);
+
+                    ForumPostModel post = postRepository.findById(comment.getPost().getId())
+                            .orElseThrow(() -> new EntityNotFoundException("No post found"));
+
+                    EventModel event = eventRepository.findById(post.getEvent().getEventID())
+                            .orElseThrow(() -> new EntityNotFoundException("No event found"));
+                    MediaModel newMedia = new MediaModel(fileName, filePath, event, comment.getAuthor(), comment);
                     mediaRepository.save(newMedia);
                     mediaModelList.add(newMedia);
                 } catch (Exception e) {
@@ -230,7 +241,9 @@ public class FileService {
     }
 
     public List<MediaModel> uploadMediaToEvent(List<MultipartFile> files, String eventID, String userName) {
-        EventModel event = eventServices.find(eventID);
+        EventModel event = eventRepository.findById(eventID)
+                .orElseThrow(() -> new EntityNotFoundException("No event found"));
+
         UserModel user = userServices.findByUsername(userName);
         return uploadFiles(files, event, user, false);
     }

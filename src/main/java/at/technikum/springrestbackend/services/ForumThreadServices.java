@@ -8,6 +8,8 @@ import at.technikum.springrestbackend.model.ForumPostModel;
 import at.technikum.springrestbackend.model.ForumThreadModel;
 import at.technikum.springrestbackend.model.MediaModel;
 import at.technikum.springrestbackend.model.UserModel;
+import at.technikum.springrestbackend.repository.EventRepository;
+import at.technikum.springrestbackend.repository.ForumPostRepository;
 import at.technikum.springrestbackend.repository.ForumThreadRepository;
 import at.technikum.springrestbackend.repository.MediaRepository;
 import jakarta.persistence.EntityExistsException;
@@ -29,9 +31,9 @@ public class ForumThreadServices {
     @Autowired
     private FileService fileService;
     @Autowired
-    private ForumPostServices postServices;
+    private ForumPostRepository postRepository;
     @Autowired
-    private EventServices eventServices;
+    private EventRepository eventRepository;
     @Autowired
     private ForumThreadMapper commentMapper;
 
@@ -58,11 +60,14 @@ public class ForumThreadServices {
 
     public boolean delete(String commentID, String username){
         ForumThreadModel comment = find(commentID);
-        ForumPostModel post = postServices.find(comment.getPost().getId());
+        ForumPostModel post = postRepository.findById(comment.getPost().getId())
+                .orElseThrow(() -> new EntityNotFoundException("no post found"));
 
         if (!comment.getAuthor().getUsername().equals(username) &&
                 !userServices.findByUsername(username).isAdmin() &&
-                !eventServices.find(post.getEvent().getEventID()).getCreator().getUsername().equals(username)) {
+                !eventRepository.findById(post.getEvent().getEventID())
+                        .orElseThrow(() -> new EntityNotFoundException("no event found"))
+                        .getCreator().getUsername().equals(username)) {
             return false;
         }
         UserModel user = userServices.findByUsername(username);
@@ -71,7 +76,7 @@ public class ForumThreadServices {
 
 
         post.getComments().remove(comment);
-        postServices.save(post);
+        postRepository.save(post);
 
         mediaRepository.deleteAllByComment(comment);
         commentRepository.delete(comment);
@@ -80,7 +85,8 @@ public class ForumThreadServices {
 
     public ForumThreadModel update(String id, ForumThreadDTO updatedCommentDTO, List<MultipartFile> files, String username){
 
-        ForumPostModel post = postServices.find(find(id).getPost().getId());
+        ForumPostModel post = postRepository.findById(find(id).getPost().getId())
+                .orElseThrow();
         UserModel user = userServices.findByUsername(username);
         //catching the case when an entity with the id does not exist
         if (!idExists(id)){
@@ -104,7 +110,7 @@ public class ForumThreadServices {
         updatedComment.getMedia().clear();
         updatedComment.getMedia().addAll(mediaList);
         post.getComments().add(updatedComment);
-        postServices.save(post);
+        postRepository.save(post);
         user.getCreatedComments().add(updatedComment);
         return commentRepository.save(updatedComment);
     }
