@@ -1,7 +1,10 @@
 package at.technikum.springrestbackend.mapper;
 
 import at.technikum.springrestbackend.dto.UserDTO;
+import at.technikum.springrestbackend.model.EventModel;
+import at.technikum.springrestbackend.model.MediaModel;
 import at.technikum.springrestbackend.model.UserModel;
+import at.technikum.springrestbackend.services.EventUtility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -11,44 +14,53 @@ import java.util.UUID;
 @Component
 public class UserMapper {
 
+    private final PasswordEncoder passwordEncoder;
+    private final MediaMapper mediaMapper;
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    private EventUtility eventUtility;
 
-    public UserDTO toDTO(UserModel userModel) {
-        //creating a new DTO of User to assign the values of the Entity to it
-        UserDTO newUserDTO = new UserDTO();
-        //assigning ID, PW and USERNAME to the DTO by using SETTER
-        newUserDTO.setUserID(userModel.getUserID());
-        newUserDTO.setAttendingEvents(userModel.getAttendingEvents());
-        newUserDTO.setUsername(userModel.getUsername());
-        newUserDTO.setEmail(userModel.getEmail());
-        newUserDTO.setProfileDescription(userModel.getProfileDescription());
-        newUserDTO.setProfilePicture(userModel.getProfilePicture());
-        return newUserDTO;
+    @Autowired
+    public UserMapper(PasswordEncoder passwordEncoder,
+                      MediaMapper mediaMapper) {
+        this.passwordEncoder = passwordEncoder;
+        this.mediaMapper = mediaMapper;
+    }
+
+
+    public UserDTO toSimpleDTO(UserModel userModel) {
+
+        return new UserDTO(
+                userModel.getUserID(), userModel.getUsername(),
+                userModel.getEmail(), userModel.getProfilePicture()
+        );
+    }
+
+    public UserDTO toFullDTO(UserModel user) {
+        UserDTO displayedUser = new UserDTO();
+        for (EventModel event : user.getAttendingEvents()){
+            displayedUser.getAttendingEvents().add(eventUtility.convertToDTO(event));
+        }
+        for (EventModel event : user.getCreatedEvents()){
+            displayedUser.getCreatedEvents().add(eventUtility.convertToDTO(event));
+        }
+        for (MediaModel media : user.getUploadedMedia()){
+            displayedUser.getUploadedMedia().add(mediaMapper.toSimpleDTO(media));
+        }
+        return new UserDTO(user.getUserID(), user.getUsername(),
+                user.getEmail(),user.getProfileDescription(),
+                user.getProfilePicture(), displayedUser.getAttendingEvents(),
+                displayedUser.getCreatedEvents(), displayedUser.getUploadedMedia()
+        );
     }
 
     public UserModel toEntity(UserDTO userDTO) {
         //DataBank entry requires the id as a primary key
-        if (userDTO.getUserID() == null) {
-            return new UserModel(
+        return new UserModel(
                     UUID.randomUUID().toString(),
                     userDTO.getUsername(),
                     passwordEncoder.encode(userDTO.getPassword()),
                     userDTO.getEmail()
-            );
-        }
-//      ALTERNATIVELY:
-//        if (userDTO.getUserId() == null) {
-//            UserModel newUserModel = new UserModel(
-//                          UUID.randomUUID().toString(),
-//                          ...
-//                      );
-//            return newUserModel;
-//        }
-        return new UserModel(
-                    userDTO.getUserID(),
-                    userDTO.getUsername(),
-                    passwordEncoder.encode(userDTO.getPassword()),
-                    userDTO.getEmail());
+        );
+
     }
 }

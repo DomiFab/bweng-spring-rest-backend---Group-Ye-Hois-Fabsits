@@ -1,49 +1,90 @@
 package at.technikum.springrestbackend.dto;
 
-import at.technikum.springrestbackend.model.EventModel;
-import at.technikum.springrestbackend.model.MediaModel;
 import jakarta.validation.constraints.NotBlank;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+
 
 public class UserDTO {
     private String userID;
-    private List<EventModel> attendingEvents;
     @NotBlank
     private String username;
-    @NotBlank
     private String password;
     @NotBlank
     private String email;
-    private MediaModel profilePicture;
+    // Zusätzliche Attribute für Soft-Delete und Admin
+    private boolean isDeleted = false;  // Hinzugefügt: Kennzeichnet, ob der Benutzer gelöscht ist
+    private boolean isAdmin = false;
     private String profileDescription;
+    private String profilePicture;
+    private Set<EventDTO> attendingEvents = new HashSet<>();
+    private Set<EventDTO> createdEvents = new HashSet<>();
+    private Set<ForumPostDTO> createdPosts = new HashSet<>();
+    private Set<ForumThreadDTO> createdComments = new HashSet<>();
+    private Set<MediaDTO> uploadedMedia = new HashSet<>();
 
     public UserDTO() {
     }
 
+    //for login form
     public UserDTO(String userID, String username, String email) {
         this.userID = userID;
         this.username = username;
         this.email = email;
     }
 
-    public UserDTO(String userID, List<EventModel> attendingEvents, String username, String password, String email, MediaModel profilePicture, String profileDescription) {
+    //for event to display list of attending users
+    public UserDTO(String userID, String username, String email, String profilePicture) {
         this.userID = userID;
+        this.username = username;
+        this.email = email;
+        this.profilePicture = profilePicture;
+    }
+
+    //dashboard display with all uploaded Media
+    public UserDTO(String userID, String username, String email, String profileDescription, String profilePicture,
+                   Set<EventDTO> attendingEvents, Set<EventDTO> createdEvents, Set<MediaDTO> uploadedMedia) {
+        this.userID = userID;
+        this.username = username;
+        this.email = email;
+        this.profileDescription = profileDescription;
+        this.profilePicture = profilePicture;
         this.attendingEvents = attendingEvents;
+        this.createdEvents = createdEvents;
+        this.uploadedMedia = uploadedMedia;
+    }
+
+    //dashboard without any Media
+    public UserDTO(String userID, String username, String email, String profileDescription, String profilePicture,
+                   Set<EventDTO> attendingEvents, Set<EventDTO> createdEvents) {
+        this.userID = userID;
+        this.username = username;
+        this.email = email;
+        this.profileDescription = profileDescription;
+        this.profilePicture = profilePicture;
+        this.attendingEvents = attendingEvents;
+        this.createdEvents = createdEvents;
+    }
+
+    //all-purpose use
+    public UserDTO(String userID, String username, String password, String email, boolean isDeleted, boolean isAdmin,
+                   String profileDescription, String profilePicture, Set<EventDTO> attendingEvents,
+                   Set<EventDTO> createdEvents, Set<ForumPostDTO> createdPosts, Set<ForumThreadDTO> createdComments,
+                   Set<MediaDTO> uploadedMedia) {
+        this.userID = userID;
         this.username = username;
         this.password = password;
         this.email = email;
-        this.profilePicture = profilePicture;
+        this.isDeleted = isDeleted;
+        this.isAdmin = isAdmin;
         this.profileDescription = profileDescription;
-    }
-
-    public UserDTO(String userID, List<EventModel> attendingEvents, String username, String email, MediaModel profilePicture, String profileDescription) {
-        this.userID = userID;
+        this.profilePicture = profilePicture;
         this.attendingEvents = attendingEvents;
-        this.username = username;
-        this.email = email;
-        this.profilePicture = profilePicture;
-        this.profileDescription = profileDescription;
+        this.createdEvents = createdEvents;
+        this.createdPosts = createdPosts;
+        this.createdComments = createdComments;
+        this.uploadedMedia = uploadedMedia;
     }
 
     public String getUserID() {
@@ -78,20 +119,20 @@ public class UserDTO {
         this.email = email;
     }
 
-    public List<EventModel> getAttendingEvents() {
-        return attendingEvents;
+    public boolean isDeleted() {
+        return isDeleted;
     }
 
-    public void setAttendingEvents(List<EventModel> attendingEvents) {
-        this.attendingEvents = attendingEvents;
+    public void setDeleted(boolean deleted) {
+        isDeleted = deleted;
     }
 
-    public MediaModel getProfilePicture() {
-        return profilePicture;
+    public boolean isAdmin() {
+        return isAdmin;
     }
 
-    public void setProfilePicture(MediaModel profilePicture) {
-        this.profilePicture = profilePicture;
+    public void setAdmin(boolean admin) {
+        isAdmin = admin;
     }
 
     public String getProfileDescription() {
@@ -100,5 +141,53 @@ public class UserDTO {
 
     public void setProfileDescription(String profileDescription) {
         this.profileDescription = profileDescription;
+    }
+
+    public String getProfilePicture() {
+        return profilePicture;
+    }
+
+    public void setProfilePicture(String profilePicture) {
+        this.profilePicture = profilePicture;
+    }
+
+    public Set<EventDTO> getAttendingEvents() {
+        return attendingEvents;
+    }
+
+    public void setAttendingEvents(Set<EventDTO> attendingEvents) {
+        this.attendingEvents = attendingEvents;
+    }
+
+    public Set<EventDTO> getCreatedEvents() {
+        return createdEvents;
+    }
+
+    public void setCreatedEvents(Set<EventDTO> createdEvents) {
+        this.createdEvents = createdEvents;
+    }
+
+    public Set<ForumPostDTO> getCreatedPosts() {
+        return createdPosts;
+    }
+
+    public void setCreatedPosts(Set<ForumPostDTO> createdPosts) {
+        this.createdPosts = createdPosts;
+    }
+
+    public Set<ForumThreadDTO> getCreatedComments() {
+        return createdComments;
+    }
+
+    public void setCreatedComments(Set<ForumThreadDTO> createdComments) {
+        this.createdComments = createdComments;
+    }
+
+    public Set<MediaDTO> getUploadedMedia() {
+        return uploadedMedia;
+    }
+
+    public void setUploadedMedia(Set<MediaDTO> uploadedMedia) {
+        this.uploadedMedia = uploadedMedia;
     }
 }

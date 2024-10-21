@@ -54,7 +54,7 @@ public class SecurityConfig {
                         // allow errors so that @ResponseStatus() will show and not 401
                         .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated());
-        // Add JwtRequestFilter before UsernamePasswordAuthenticationFilter for username password checking
+        // Add JwtRequestFilter before every request that requires log in status
         http.
                 addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 

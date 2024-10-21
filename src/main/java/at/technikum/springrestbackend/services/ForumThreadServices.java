@@ -1,61 +1,121 @@
 package at.technikum.springrestbackend.services;
 
 import at.technikum.springrestbackend.dto.ForumPostDTO;
+import at.technikum.springrestbackend.dto.ForumThreadDTO;
 import at.technikum.springrestbackend.exception.EntityNotFoundException;
+import at.technikum.springrestbackend.mapper.ForumThreadMapper;
 import at.technikum.springrestbackend.model.ForumPostModel;
-import at.technikum.springrestbackend.repository.ForumPostRepository;
+import at.technikum.springrestbackend.model.ForumThreadModel;
+import at.technikum.springrestbackend.model.MediaModel;
+import at.technikum.springrestbackend.model.UserModel;
+import at.technikum.springrestbackend.repository.ForumThreadRepository;
+import at.technikum.springrestbackend.repository.MediaRepository;
 import jakarta.persistence.EntityExistsException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class ForumThreadServices {
-    private final ForumPostRepository postRepository;
+    private final ForumThreadRepository commentRepository;
+    @Autowired
+    private MediaRepository mediaRepository;
+    @Autowired
+    private UserServices userServices;
+    @Autowired
+    private FileService fileService;
+    @Autowired
+    private ForumPostServices postServices;
+    @Autowired
+    private EventServices eventServices;
+    @Autowired
+    private ForumThreadMapper commentMapper;
 
-    public ForumThreadServices(ForumPostRepository postRepository) {
-        this.postRepository = postRepository;
+    @Autowired
+    public ForumThreadServices(ForumThreadRepository commentRepository) {
+        this.commentRepository = commentRepository;
     }
 
     public boolean idExists(String id){
-        return postRepository.existsById(id);
+        return commentRepository.existsById(id);
     }
-    public ForumPostModel find(String id) {
-        return postRepository.findById(id)
+    public ForumThreadModel find(String id) {
+        return commentRepository.findById(id)
                 .orElseThrow(() -> new EntityExistsException("Post not found with id: " + id));
     }
 
-    public List<ForumPostModel> findAll (){
-        return postRepository.findAll();
+    public List<ForumThreadModel> findAll (){
+        return commentRepository.findAll();
     }
 
-//    public List<ForumPostModel> findAllByEvent (EventModel event) {
-//        //TODO: list of posts of a certain event
-//        return postRepository.findAllById(event.getEventId());
-//    }
-
-    public ForumPostModel save(ForumPostModel forumPostModel){
-        return postRepository.save(forumPostModel);
+    public ForumThreadModel save(ForumThreadModel commentModel){
+        return commentRepository.save(commentModel);
     }
 
-    public ForumPostModel update(String id, ForumPostDTO forumPostDTOupdated){
+    public boolean delete(String commentID, String username){
+        ForumThreadModel comment = find(commentID);
+        ForumPostModel post = postServices.find(comment.getPost().getId());
 
+        if (!comment.getAuthor().getUsername().equals(username) &&
+                !userServices.findByUsername(username).isAdmin() &&
+                !eventServices.find(post.getEvent().getEventID()).getCreator().getUsername().equals(username)) {
+            return false;
+        }
+        UserModel user = userServices.findByUsername(username);
+        user.getCreatedComments().remove(comment);
+        userServices.save(user);
+
+
+        post.getComments().remove(comment);
+        postServices.save(post);
+
+        mediaRepository.deleteAllByComment(comment);
+        commentRepository.delete(comment);
+        return true;
+    }
+
+    public ForumThreadModel update(String id, ForumThreadDTO updatedCommentDTO, List<MultipartFile> files, String username){
+
+        ForumPostModel post = postServices.find(find(id).getPost().getId());
+        UserModel user = userServices.findByUsername(username);
         //catching the case when an entity with the id does not exist
         if (!idExists(id)){
             throw new EntityNotFoundException("Forum Post with provided ID [" + id + "] not found.");
         }
 
         //get the existing Post from the DB and THEN set new values
-        ForumPostModel existingPost = postRepository.findById(id).orElseThrow();
+        ForumThreadModel updatedComment = find(id);
 
-        existingPost.setAllEntity(
-                id,
-                forumPostDTOupdated.getTitle(),
-                forumPostDTOupdated.getAuthor(),
-                forumPostDTOupdated.getContent(),
-                forumPostDTOupdated.getMediaPlaceHolder());
+        if (!userServices.find(updatedComment.getAuthor().getUserID()).getUsername().equals(username) &&
+                !userServices.findByUsername(username).isAdmin()) {
+            throw new AccessDeniedException("You do not have permission to update this comment.");
+        }
+        post.getComments().remove(updatedComment);
+        user.getCreatedComments().remove(updatedComment);
+        //update post details
+        updatedComment.setContent(updatedCommentDTO.getContent());
+        //update post media
+        List<MediaModel> mediaList = fileService.updateCommentMedia(files, updatedComment);
+        //clear the media list to repopulate with new set of media
+        updatedComment.getMedia().clear();
+        updatedComment.getMedia().addAll(mediaList);
+        post.getComments().add(updatedComment);
+        postServices.save(post);
+        user.getCreatedComments().add(updatedComment);
+        return commentRepository.save(updatedComment);
+    }
 
-        return postRepository.save(existingPost);
+    public Set<ForumThreadDTO> toDTOList(ForumPostModel postModel){
+        ForumPostDTO post = new ForumPostDTO();
+
+        for (ForumThreadModel comment : postModel.getComments()){
+            post.getComments().add(commentMapper.toFullDTO(comment));
+        }
+        return post.getComments();
     }
 }
 

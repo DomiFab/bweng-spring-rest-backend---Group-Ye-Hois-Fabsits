@@ -1,83 +1,94 @@
 package at.technikum.springrestbackend.controller;
 
 
-import at.technikum.springrestbackend.dto.ForumPostDTO;
-import at.technikum.springrestbackend.mapper.ForumPostMapper;
-import at.technikum.springrestbackend.model.ForumPostModel;
-import at.technikum.springrestbackend.repository.ForumPostRepository;
-import at.technikum.springrestbackend.services.ForumPostServices;
+import at.technikum.springrestbackend.dto.ForumThreadDTO;
+import at.technikum.springrestbackend.mapper.ForumThreadMapper;
+import at.technikum.springrestbackend.model.*;
+import at.technikum.springrestbackend.security.SecurityUtil;
+import at.technikum.springrestbackend.services.*;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.stream.Collectors;
+import org.springframework.web.multipart.MultipartFile;
 
-//FORUM THREAD, NOT POST! NAMING IS BAD!
+import java.util.List;
+
+
+//Forum Thread == Comment to a Post
 @RestController
 @RequestMapping("/forumthreads")
 @CrossOrigin
 public class ForumThreadController {
 
-    private final ForumPostMapper postMapper;
-    private final ForumPostServices postServices;
-    private final ForumPostRepository postRepository;
+    private final ForumThreadMapper commentMapper;
+    private final ForumThreadServices commentServices;
+    private final FileService fileService;
+    @Autowired
+    private UserServices userServices;
+    @Autowired
+    private ForumPostServices postServices;
 
     @Autowired
-    public ForumThreadController(
-            ForumPostMapper postMapper,
-            ForumPostServices postServices,
-            ForumPostRepository postRepository) {
-        this.postMapper = postMapper;
-        this.postServices = postServices;
-        this.postRepository = postRepository;
+    public ForumThreadController(ForumThreadMapper commentMapper, ForumThreadServices commentServices,
+                                 FileService fileService) {
+        this.commentMapper = commentMapper;
+        this.commentServices = commentServices;
+        this.fileService = fileService;
     }
 
-    @GetMapping
-    @ResponseStatus(HttpStatus.OK)
-    public List<ForumPostDTO> readAll() {
-        return postServices.findAll().stream()
-                .map(postMapper::toDTO)
-                .collect(Collectors.toList());
-    }
-
-//    @GetMapping("/{eventid}")
-//    @ResponseStatus(HttpStatus.OK)
-//    public List<ForumPostDTO> readAllofEvent(@PathVariable String eventid){
-//        return postServices.findAllByEvent(eventid).stream()
-//                .map(postMapper::toDTO)
-//                .collect(Collectors.toList());
-//    }
-
-    @GetMapping("/{id}")
+    @GetMapping("/{commentID}")
     @ResponseStatus(HttpStatus.FOUND)
-    public ForumPostDTO read(@PathVariable String id) {
-        ForumPostModel forumPost = postServices.find(id);
-        return postMapper.toDTO(forumPost);
+    public ForumThreadDTO read(@PathVariable String commentID) {
+        ForumThreadModel comment = commentServices.find(commentID);
+        return commentMapper.toFullDTO(comment);
     }
 
-    @PostMapping()
+    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     @ResponseStatus(HttpStatus.CREATED)
-    public ForumPostDTO create(@RequestBody @Valid ForumPostDTO forumPostDTO){
-        ForumPostModel forumPost = postMapper.toEntity(forumPostDTO);
-        postServices.save(forumPost);
-        return postMapper.toDTO(forumPost);
+    public ForumThreadDTO create(@RequestPart("commentData") @Valid ForumThreadDTO commentDTO,
+                                 @RequestPart("files") List<MultipartFile> files){
+        ForumThreadModel comment = commentMapper.toEntity(commentDTO);
+        String username = SecurityUtil.getCurrentUserName();
+
+        List<MediaModel> mediaList = fileService.uploadMediaToComment(files, comment, username);
+        comment.getMedia().addAll(mediaList);
+        commentServices.save(comment);
+
+        //save the comment to the post
+        ForumPostModel post = postServices.find(comment.getPost().getId());
+        post.getComments().add(comment);
+        postServices.save(post);
+
+        //save the comment to the user
+        UserModel userModel = userServices.findByUsername(username);
+        userModel.getCreatedComments().add(comment);
+        userServices.save(userModel);
+
+        return commentMapper.toFullDTO(comment);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{commentID}")
     @ResponseStatus(HttpStatus.OK)
-    public ForumPostDTO update(@PathVariable String id, @RequestBody ForumPostDTO updatedForumPostDTO){
+    public ForumThreadDTO update(@PathVariable String commentID,
+                               @RequestPart("commentData") @Valid ForumThreadDTO updatedCommentDTO,
+                               @RequestPart(value = "files", required = false) List<MultipartFile> files){
 
-        //for update logic CTRL+LMB on 'update' - method call
-        return postMapper.toDTO(postServices.update(id, updatedForumPostDTO));
+        String username = SecurityUtil.getCurrentUserName();
+        return commentMapper.toFullDTO(
+                commentServices.update(commentID, updatedCommentDTO, files, username));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{commentID}")
     @ResponseStatus(HttpStatus.FOUND)
-    public void delete(@PathVariable String id){
-//        postServices.find(id);
-        postRepository.deleteById(id);
-        System.out.println("Forum Thread with id: " + id + " deleted successfully!");
+    public ResponseEntity<String> delete(@PathVariable String commentID){
 
+        String username = SecurityUtil.getCurrentUserName();
+        boolean isDeleted = commentServices.delete(commentID, username);
+        return isDeleted
+                ? ResponseEntity.ok("Comment deleted successfully.")
+                : ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authorized to delete this comment.");
     }
 }

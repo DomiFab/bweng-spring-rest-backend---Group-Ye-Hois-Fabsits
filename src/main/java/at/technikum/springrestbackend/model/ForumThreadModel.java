@@ -2,47 +2,38 @@ package at.technikum.springrestbackend.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
-
-import java.util.List;
+import jakarta.validation.constraints.NotBlank;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
-@Table(name = "forumThreads")
+@Table(name = "forum_threads")
 public class ForumThreadModel {
     @Id
     private String id;
-    private String title;
-    @Valid
-    private String author;
     private String content;
-//    @OneToMany(mappedBy = "forumThreads")
-//    private List<ForumPostModel> forumPosts;
+    @Valid
+    @NotBlank
+    @ManyToOne
+    @JoinColumn(name = "fk_comment_author")
+    private UserModel author;
+    @ManyToOne
+    @JoinColumn(name = "fk_belongto_post")
+    private ForumPostModel post;
+    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<MediaModel> media = new HashSet<>();
 
-    //media attachments as URL, BLOB or filepath?
-    //List for multiple file upload
-    @ElementCollection
-    private List<String> mediaPlaceHolder;
 
     public ForumThreadModel() {
     }
 
-    public ForumThreadModel(String id, String title, String author, /*EventModel event, List<ForumPostModel> forumPosts,*/ List<String> mediaPlaceHolder, String content) {
+    public ForumThreadModel(String id, String content, UserModel author,
+                            ForumPostModel post, Set<MediaModel> media) {
         this.id = id;
-        this.title = title;
-        this.author = author;
-//        this.event = event;
-//        this.forumPosts = forumPosts;
-        this.mediaPlaceHolder = mediaPlaceHolder;
         this.content = content;
-    }
-
-    public void setAllEntity(String id, String title, String author, /*EventModel event, List<ForumPostModel> forumPosts, */List<String> mediaPlaceHolder, String content) {
-        this.id = id;
-        this.title = title;
         this.author = author;
-//        this.event = event;
-//        this.forumPosts = forumPosts;
-        this.mediaPlaceHolder = mediaPlaceHolder;
-        this.content = content;
+        this.post = post;
+        this.media = media;
     }
 
     public String getId() {
@@ -53,46 +44,6 @@ public class ForumThreadModel {
         this.id = id;
     }
 
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getAuthor() {
-        return author;
-    }
-
-    public void setAuthor(String author) {
-        this.author = author;
-    }
-
-//    public EventModel getEvent() {
-//        return event;
-//    }
-//
-//    public void setEvent(EventModel event) {
-//        this.event = event;
-//    }
-//
-//    public List<ForumPostModel> getForumPosts() {
-//        return forumPosts;
-//    }
-//
-//    public void setForumPosts(List<ForumPostModel> forumPosts) {
-//        this.forumPosts = forumPosts;
-//    }
-
-    public List<String> getMediaPlaceHolder() {
-        return mediaPlaceHolder;
-    }
-
-    public void setMediaPlaceHolder(List<String> mediaPlaceHolder) {
-        this.mediaPlaceHolder = mediaPlaceHolder;
-    }
-
     public String getContent() {
         return content;
     }
@@ -101,4 +52,27 @@ public class ForumThreadModel {
         this.content = content;
     }
 
+    public UserModel getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(UserModel author) {
+        this.author = author;
+    }
+
+    public ForumPostModel getPost() {
+        return post;
+    }
+
+    public void setPost(ForumPostModel post) {
+        this.post = post;
+    }
+
+    public Set<MediaModel> getMedia() {
+        return media;
+    }
+
+    public void setMedia(Set<MediaModel> media) {
+        this.media = media;
+    }
 }

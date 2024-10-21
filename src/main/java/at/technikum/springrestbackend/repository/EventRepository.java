@@ -10,7 +10,7 @@ import java.util.List;
 public interface EventRepository extends ListCrudRepository<EventModel, String> {
 
     // Methode zum Suchen von Events nach Location
-    List<EventModel> findByEventAdress(String eventAdress);
+    List<EventModel> findByEventLocation(String eventAdress);
 
     // Methode zum Deaktivieren (löschen) eines Events (setzt isDeleted auf true)
     default void softDeleteEvent(EventModel event) {
