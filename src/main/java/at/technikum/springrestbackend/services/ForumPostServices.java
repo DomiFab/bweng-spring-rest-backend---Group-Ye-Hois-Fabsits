@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class ForumPostServices {
@@ -32,23 +33,24 @@ public class ForumPostServices {
         this.postRepository = postRepository;
     }
 
-    public boolean idExists(String id){
+    public boolean idExists(UUID id) {
         return postRepository.existsById(id);
     }
-    public ForumPostModel find(String id) {
+
+    public ForumPostModel find(UUID id) {
         return postRepository.findById(id)
                 .orElseThrow(() -> new EntityExistsException("Post not found with id: " + id));
     }
 
-    public List<ForumPostModel> findAll (){
+    public List<ForumPostModel> findAll() {
         return postRepository.findAll();
     }
 
-    public ForumPostModel save(ForumPostModel forumPostModel){
+    public ForumPostModel save(ForumPostModel forumPostModel) {
         return postRepository.save(forumPostModel);
     }
 
-    public boolean delete(String postID, String username){
+    public boolean delete(UUID postID, String username) {
         ForumPostModel post = find(postID);
         if (!post.getAuthor().getUsername().equals(username) &&
                 !userServices.findByUsername(username).isAdmin() &&
@@ -67,12 +69,12 @@ public class ForumPostServices {
         return true;
     }
 
-    public ForumPostModel update(String id, ForumPostDTO updatedForumPostDTO, List<MultipartFile> files, String username){
-        //catching the case when an entity with the id does not exist
-        if (!idExists(id)){
+    public ForumPostModel update(UUID id, ForumPostDTO updatedForumPostDTO, List<MultipartFile> files, String username) {
+        // Catching the case when an entity with the id does not exist
+        if (!idExists(id)) {
             throw new EntityNotFoundException("Forum Post with provided ID [" + id + "] not found.");
         }
-        //get the existing Post from the DB and THEN set new values
+        // Get the existing Post from the DB and THEN set new values
         ForumPostModel updatedPost = find(id);
         UserModel user = userServices.findByUsername(username);
         EventModel event = eventServices.find(updatedPost.getEvent().getEventID());
@@ -82,12 +84,12 @@ public class ForumPostServices {
         }
         user.getCreatedPosts().remove(updatedPost);
         event.getEventPosts().remove(updatedPost);
-        //update post details
+        // Update post details
         updatedPost.setTitle(updatedForumPostDTO.getTitle());
         updatedPost.setContent(updatedForumPostDTO.getContent());
-        //update post media
+        // Update post media
         List<MediaModel> mediaList = fileService.updatePostMedia(files, updatedPost);
-        //clear the media list to repopulate with new set of media
+        // Clear the media list to repopulate with new set of media
         updatedPost.getMedia().clear();
         updatedPost.getMedia().addAll(mediaList);
         event.getEventPosts().add(updatedPost);
@@ -96,6 +98,4 @@ public class ForumPostServices {
         userServices.save(user);
         return postRepository.save(updatedPost);
     }
-
 }
-

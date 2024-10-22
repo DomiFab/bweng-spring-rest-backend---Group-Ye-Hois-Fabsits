@@ -27,10 +27,10 @@ public class ForumPostMapper {
     private UserMapper userMapper;
 
     public ForumPostModel toEntity(ForumPostDTO forumPostDTO) {
-
         return new ForumPostModel(
-                UUID.randomUUID().toString(),
-                forumPostDTO.getTitle(), forumPostDTO.getContent(),
+                UUID.randomUUID(), // Generate UUID
+                forumPostDTO.getTitle(),
+                forumPostDTO.getContent(),
                 userServices.find(forumPostDTO.getAuthorID().getUserID()),
                 eventServices.find(forumPostDTO.getEventID()),
                 new HashSet<>()
@@ -38,9 +38,9 @@ public class ForumPostMapper {
     }
 
     public ForumPostDTO toSimpleDTO(ForumPostModel postModel) {
-
         return new ForumPostDTO(
-                postModel.getId(), postModel.getTitle(),
+                postModel.getId(),
+                postModel.getTitle(),
                 userMapper.toSimpleDTO(postModel.getAuthor()),
                 postModel.getEvent().getEventID(),
                 postModel.getContent(),
@@ -48,10 +48,10 @@ public class ForumPostMapper {
         );
     }
 
-    public ForumPostDTO toFullDTO(ForumPostModel postModel){
-
+    public ForumPostDTO toFullDTO(ForumPostModel postModel) {
         return new ForumPostDTO(
-                postModel.getId(), postModel.getTitle(),
+                postModel.getId(),
+                postModel.getTitle(),
                 userMapper.toSimpleDTO(postModel.getAuthor()),
                 postModel.getEvent().getEventID(),
                 postModel.getContent(),
@@ -59,7 +59,4 @@ public class ForumPostMapper {
                 commentServices.toDTOList(postModel)
         );
     }
-
-
-
 }

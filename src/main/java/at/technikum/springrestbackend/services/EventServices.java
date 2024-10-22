@@ -131,9 +131,9 @@ public class EventServices {
         return save(event);
     }
 
-    public EventModel leaveEvent(UUID eventId, UUID userID) {
+    public EventModel leaveEvent(UUID eventId, String username) {
         EventModel event = find(eventId);
-        UserModel user = userServices.find(userID);
+        UserModel user = userServices.findByUsername(username);
 
         event.getAttendingUsers().remove(user);
         user.getAttendingEvents().remove(event);

@@ -5,35 +5,40 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "forum_posts")
 public class ForumPostModel {
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
     private String title;
     private String content;
+
     @Valid
     @NotBlank
     @ManyToOne
-    @JoinColumn(name = "fk_author") //foreign key
+    @JoinColumn(name = "fk_author") // foreign key
     private UserModel author;
+
     @NotBlank
     @ManyToOne
     @JoinColumn(name = "fk_event_to_post")
     private EventModel event;
+
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ForumThreadModel> comments = new HashSet<>();
+
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<MediaModel> media = new HashSet<>();
 
     public ForumPostModel() {
     }
 
-    //for creating post
-    public ForumPostModel(String id, String title, String content,
-                          UserModel author, EventModel event, Set<MediaModel> media) {
-        this.id = id;
+    // For creating post
+    public ForumPostModel(String title, String content, UserModel author, EventModel event, Set<MediaModel> media) {
+        this.id = UUID.randomUUID(); // Generate UUID
         this.title = title;
         this.content = content;
         this.author = author;
@@ -41,10 +46,9 @@ public class ForumPostModel {
         this.media = media;
     }
 
-    //for displaying post
-    public ForumPostModel(String id, String title, String content, UserModel author, EventModel event,
-                          Set<ForumThreadModel> comments, Set<MediaModel> media) {
-        this.id = id;
+    // For displaying post
+    public ForumPostModel(String title, String content, UserModel author, EventModel event, Set<ForumThreadModel> comments, Set<MediaModel> media) {
+        this.id = UUID.randomUUID(); // Generate UUID
         this.title = title;
         this.content = content;
         this.author = author;
@@ -53,11 +57,12 @@ public class ForumPostModel {
         this.media = media;
     }
 
-    public String getId() {
+    // Getters and Setters
+    public UUID getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
@@ -97,7 +102,7 @@ public class ForumPostModel {
         return comments;
     }
 
-    public void setComment(Set<ForumThreadModel> comments) {
+    public void setComments(Set<ForumThreadModel> comments) {
         this.comments = comments;
     }
 

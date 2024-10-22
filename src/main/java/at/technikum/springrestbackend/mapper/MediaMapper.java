@@ -6,17 +6,17 @@ import at.technikum.springrestbackend.services.UserUtility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-
 @Component
 public class MediaMapper {
 
     @Autowired
     private UserUtility userUtility;
 
-    public MediaDTO toSimpleDTO (MediaModel media){
+    public MediaDTO toSimpleDTO(MediaModel media) {
         return new MediaDTO(
-                media.getMediaID(), media.getFileLocation(),
-                media.getEvent().getEventID(),
+                media.getMediaID(),
+                media.getFileLocation(),
+                media.getEvent() != null ? media.getEvent().getEventID() : null,
                 userUtility.toSimpleDTO(media.getUploader()),
                 media.isFrontPic()
         );

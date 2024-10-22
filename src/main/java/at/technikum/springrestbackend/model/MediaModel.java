@@ -1,24 +1,30 @@
 package at.technikum.springrestbackend.model;
 
 import jakarta.persistence.*;
+import java.util.UUID;
 
 @Entity
 @Table(name = "media")
 public class MediaModel {
 
     @Id
-    private String mediaID;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID mediaID;
     private String fileLocation;
     private boolean isFrontPic = false;
+
     @ManyToOne
-    @JoinColumn(name = "fk_belong_to_event") //foreign key
+    @JoinColumn(name = "fk_belong_to_event") // foreign key
     private EventModel event;
+
     @ManyToOne
     @JoinColumn(name = "fk_uploader")
     private UserModel uploader;
+
     @ManyToOne
     @JoinColumn(name = "fk_post")
     private ForumPostModel post;
+
     @ManyToOne
     @JoinColumn(name = "fk_comment")
     private ForumThreadModel comment;
@@ -26,50 +32,46 @@ public class MediaModel {
     public MediaModel() {
     }
 
-    //profilepicture
-    public MediaModel(String mediaID, String fileLocation, UserModel uploader) {
-        this.mediaID = mediaID;
+    // Profile picture
+    public MediaModel(String fileLocation, UserModel uploader) {
+        this.mediaID = UUID.randomUUID(); // Generate UUID
         this.fileLocation = fileLocation;
         this.uploader = uploader;
     }
 
-
-
-    //event gallery
-    public MediaModel(String mediaID, String fileLocation, EventModel event, UserModel uploader,
-                      boolean isHeader) {
-        this.mediaID = mediaID;
+    // Event gallery
+    public MediaModel(String fileLocation, EventModel event, UserModel uploader, boolean isHeader) {
+        this.mediaID = UUID.randomUUID(); // Generate UUID
         this.fileLocation = fileLocation;
         this.event = event;
         this.uploader = uploader;
         this.isFrontPic = isHeader;
     }
 
-    //event post
-    public MediaModel(String mediaID, String fileLocation, EventModel event, UserModel uploader,
-                      ForumPostModel post) {
-        this.mediaID = mediaID;
+    // Event post
+    public MediaModel(String fileLocation, EventModel event, UserModel uploader, ForumPostModel post) {
+        this.mediaID = UUID.randomUUID(); // Generate UUID
         this.fileLocation = fileLocation;
         this.event = event;
         this.uploader = uploader;
         this.post = post;
     }
 
-    //post comment
-    public MediaModel(String mediaID, String fileLocation, EventModel event, UserModel uploader,
-                      ForumThreadModel comment) {
-        this.mediaID = mediaID;
+    // Post comment
+    public MediaModel(String fileLocation, EventModel event, UserModel uploader, ForumThreadModel comment) {
+        this.mediaID = UUID.randomUUID(); // Generate UUID
         this.fileLocation = fileLocation;
         this.event = event;
         this.uploader = uploader;
         this.comment = comment;
     }
 
-    public String getMediaID() {
+    // Getters and Setters
+    public UUID getMediaID() {
         return mediaID;
     }
 
-    public void setMediaID(String mediaID) {
+    public void setMediaID(UUID mediaID) {
         this.mediaID = mediaID;
     }
 

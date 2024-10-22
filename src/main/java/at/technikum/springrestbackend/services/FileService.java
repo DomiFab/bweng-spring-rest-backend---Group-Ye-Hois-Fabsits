@@ -107,13 +107,12 @@ public class FileService {
         }
     }
 
-
-    public String uploadProfilePicture(Long userID, MultipartFile file, String authUser) {
+    public String uploadProfilePicture(UUID userID, MultipartFile file, String authUser) {
         // Validate the input file
         if (file.isEmpty()) {
             throw new IllegalArgumentException("File must not be empty.");
         }
-        if (!userServices.find(userID).getUsername().equals(authUser)){
+        if (!userServices.find(userID).getUsername().equals(authUser)) {
             throw new AccessDeniedException("You do not have the authority to change this Profile Picture");
         }
         // Find the user by ID
@@ -139,7 +138,7 @@ public class FileService {
         return filePath; // Return the file path if needed
     }
 
-    public List<MediaModel> uploadMediaToComment(List<MultipartFile> files, ForumThreadModel comment, String username){
+    public List<MediaModel> uploadMediaToComment(List<MultipartFile> files, ForumThreadModel comment, String username) {
         if (username == null || username.isEmpty()) {
             throw new AccessDeniedException("You need to be logged in to comment.");
         }
@@ -167,7 +166,7 @@ public class FileService {
         return mediaList;
     }
 
-    public List<MediaModel> updateCommentMedia(List<MultipartFile> files, ForumThreadModel comment){
+    public List<MediaModel> updateCommentMedia(List<MultipartFile> files, ForumThreadModel comment) {
         List<MediaModel> mediaModelList = new ArrayList<>();
         if (!files.isEmpty()) {
             // First, remove the old media associated with the post
@@ -195,7 +194,7 @@ public class FileService {
         return mediaModelList;
     }
 
-    public List<MediaModel> updatePostMedia(List<MultipartFile> files, ForumPostModel post){
+    public List<MediaModel> updatePostMedia(List<MultipartFile> files, ForumPostModel post) {
         List<MediaModel> mediaModelList = new ArrayList<>();
         if (!files.isEmpty()) {
             // First, remove the old media associated with the post
@@ -229,7 +228,7 @@ public class FileService {
         return uploadFiles(files, event, event.getCreator(), true);
     }
 
-    public List<MediaModel> uploadMediaToEvent(List<MultipartFile> files, String eventID, String userName) {
+    public List<MediaModel> uploadMediaToEvent(List<MultipartFile> files, UUID eventID, String userName) {
         EventModel event = eventServices.find(eventID);
         UserModel user = userServices.findByUsername(userName);
         return uploadFiles(files, event, user, false);

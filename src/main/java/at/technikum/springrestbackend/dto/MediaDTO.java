@@ -1,15 +1,15 @@
 package at.technikum.springrestbackend.dto;
 
-
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import java.util.UUID;
 
 public class MediaDTO {
-    private String mediaID;
+    private UUID mediaID;
     @NotBlank
     @Valid
     private String fileLocation;
-    private String eventID;
+    private UUID eventID;
     private boolean isFrontPic = false;
     @NotBlank
     @Valid
@@ -20,16 +20,15 @@ public class MediaDTO {
     public MediaDTO() {
     }
 
-    //profile picture
-    public MediaDTO(String mediaID, String fileLocation, UserDTO uploader) {
+    // Profile picture
+    public MediaDTO(UUID mediaID, String fileLocation, UserDTO uploader) {
         this.mediaID = mediaID;
         this.fileLocation = fileLocation;
         this.uploader = uploader;
     }
 
-    //gallery picture with is FrontPic tag
-    public MediaDTO(String mediaID, String fileLocation, String eventID, UserDTO uploader,
-                    boolean isFrontPic) {
+    // Gallery picture with isFrontPic tag
+    public MediaDTO(UUID mediaID, String fileLocation, UUID eventID, UserDTO uploader, boolean isFrontPic) {
         this.mediaID = mediaID;
         this.fileLocation = fileLocation;
         this.eventID = eventID;
@@ -37,9 +36,8 @@ public class MediaDTO {
         this.isFrontPic = isFrontPic;
     }
 
-    //post media
-    public MediaDTO(String mediaID, String fileLocation, String eventID, UserDTO uploader,
-                    String post) {
+    // Post media
+    public MediaDTO(UUID mediaID, String fileLocation, UUID eventID, UserDTO uploader, String post) {
         this.mediaID = mediaID;
         this.fileLocation = fileLocation;
         this.eventID = eventID;
@@ -47,9 +45,8 @@ public class MediaDTO {
         this.post = post;
     }
 
-    //comment media
-    public MediaDTO(String mediaID, String fileLocation, String eventID, UserDTO uploader,
-                    String post, ForumThreadDTO comment) {
+    // Comment media
+    public MediaDTO(UUID mediaID, String fileLocation, UUID eventID, UserDTO uploader, String post, ForumThreadDTO comment) {
         this.mediaID = mediaID;
         this.fileLocation = fileLocation;
         this.eventID = eventID;
@@ -58,11 +55,12 @@ public class MediaDTO {
         this.comment = comment;
     }
 
-    public String getMediaID() {
+    // Getters and Setters
+    public UUID getMediaID() {
         return mediaID;
     }
 
-    public void setMediaID(String mediaID) {
+    public void setMediaID(UUID mediaID) {
         this.mediaID = mediaID;
     }
 
@@ -74,11 +72,11 @@ public class MediaDTO {
         this.fileLocation = fileLocation;
     }
 
-    public String getEventID() {
+    public UUID getEventID() {
         return eventID;
     }
 
-    public void setEventID(String eventID) {
+    public void setEventID(UUID eventID) {
         this.eventID = eventID;
     }
 
@@ -104,5 +102,13 @@ public class MediaDTO {
 
     public void setComment(ForumThreadDTO comment) {
         this.comment = comment;
+    }
+
+    public boolean isFrontPic() {
+        return isFrontPic;
+    }
+
+    public void setFrontPic(boolean frontPic) {
+        isFrontPic = frontPic;
     }
 }

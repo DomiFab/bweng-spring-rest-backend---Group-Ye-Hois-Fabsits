@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,50 +27,53 @@ public class MediaServices {
     @Autowired
     private EventServices eventServices;
 
-
-    public MediaModel find(String id) {
+    public MediaModel find(UUID id) {
         return mediaRepository.findById(id)
-                .orElseThrow(() -> new EntityExistsException("Event not found with id: " + id));
+                .orElseThrow(() -> new EntityExistsException("Media not found with id: " + id));
     }
 
-    public MediaModel findByEventAndMedia(String mediaID, String eventID) {
+    public MediaModel findByEventAndMedia(UUID mediaID, UUID eventID) {
         return mediaRepository.findByMediaIDAndEvent(mediaID, eventServices.find(eventID))
-                .orElseThrow(() -> new EntityExistsException("Event not found with id: " + eventID));
+                .orElseThrow(() -> new EntityExistsException("Media not found with id: " + mediaID + " for event id: " + eventID));
     }
 
-    public List<MediaModel> findAll (){
+    public List<MediaModel> findAll() {
         return mediaRepository.findAll();
     }
 
-    public MediaModel save(MediaModel mediaModel){
+    public MediaModel save(MediaModel mediaModel) {
         return mediaRepository.save(mediaModel);
     }
 
-    public Set<MediaDTO> getFrontPicture (Set<MediaModel> pictures){
+    public void delete(MediaModel mediaModel) {
+        mediaRepository.delete(mediaModel);
+    }
+
+    public Set<MediaDTO> getFrontPicture(Set<MediaModel> pictures) {
         return pictures.stream()
                 .filter(MediaModel::isFrontPic) // Filter only front pictures
                 .map(picture -> new MediaDTO(
                         picture.getMediaID(),
                         picture.getFileLocation(),
-                        picture.getEvent().getEventID(),
+                        picture.getEvent() != null ? picture.getEvent().getEventID() : null,
                         userMapper.toSimpleDTO(picture.getUploader()),
                         picture.isFrontPic()))
                 .collect(Collectors.toSet()); // Collect results into a Set
     }
 
-    public Set<String> postToStringList(ForumPostModel postModel){
+    public Set<String> postToStringList(ForumPostModel postModel) {
         ForumPostDTO post = new ForumPostDTO();
 
-        for (MediaModel media : postModel.getMedia()){
+        for (MediaModel media : postModel.getMedia()) {
             post.getMedia().add(media.getFileLocation());
         }
         return post.getMedia();
     }
 
-    public Set<String> commentToStringList(ForumThreadModel comment){
+    public Set<String> commentToStringList(ForumThreadModel comment) {
         ForumThreadDTO post = new ForumThreadDTO();
 
-        for (MediaModel media : comment.getMedia()){
+        for (MediaModel media : comment.getMedia()) {
             post.getMedia().add(media.getFileLocation());
         }
         return post.getMedia();

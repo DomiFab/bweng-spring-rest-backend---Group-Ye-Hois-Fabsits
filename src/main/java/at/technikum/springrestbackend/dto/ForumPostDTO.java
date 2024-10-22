@@ -2,19 +2,19 @@ package at.technikum.springrestbackend.dto;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 public class ForumPostDTO {
-    private String id;
+    private UUID id;
     private String title;
     @NotBlank
     @Valid
     private UserDTO authorID;
     @NotBlank
     @Valid
-    private String eventID;
+    private UUID eventID;
     private String content;
     private Set<String> media = new HashSet<>();
     private Set<ForumThreadDTO> comments = new HashSet<>();
@@ -22,9 +22,8 @@ public class ForumPostDTO {
     public ForumPostDTO() {
     }
 
-    //for display when opening event page
-    public ForumPostDTO(String id, String title, UserDTO authorID, String eventID,
-                        String content, Set<String> media, Set<ForumThreadDTO> comments) {
+    // For display when opening event page
+    public ForumPostDTO(UUID id, String title, UserDTO authorID, UUID eventID, String content, Set<String> media, Set<ForumThreadDTO> comments) {
         this.id = id;
         this.title = title;
         this.authorID = authorID;
@@ -34,9 +33,8 @@ public class ForumPostDTO {
         this.comments = comments;
     }
 
-    //for saving post to database, no comments because it is only a post creation
-    public ForumPostDTO(String id, String title, UserDTO authorID, String eventID,
-                        String content, Set<String> media) {
+    // For saving post to database, no comments because it is only a post creation
+    public ForumPostDTO(UUID id, String title, UserDTO authorID, UUID eventID, String content, Set<String> media) {
         this.id = id;
         this.title = title;
         this.authorID = authorID;
@@ -45,11 +43,12 @@ public class ForumPostDTO {
         this.media = media;
     }
 
-    public String getId() {
+    // Getters and Setters
+    public UUID getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
@@ -69,11 +68,11 @@ public class ForumPostDTO {
         this.authorID = authorID;
     }
 
-    public String getEventID() {
+    public UUID getEventID() {
         return eventID;
     }
 
-    public void setEventID(String eventID) {
+    public void setEventID(UUID eventID) {
         this.eventID = eventID;
     }
 

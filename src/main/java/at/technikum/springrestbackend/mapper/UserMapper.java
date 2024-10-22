@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 public class UserMapper {
 
@@ -57,6 +59,7 @@ public class UserMapper {
 
     public UserModel toEntity(UserDTO userDTO) {
         UserModel userModel = new UserModel();
+        userModel.setUserID(userDTO.getUserID() != null ? userDTO.getUserID() : UUID.randomUUID());
         userModel.setUsername(userDTO.getUsername());
         userModel.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         userModel.setEmail(userDTO.getEmail());

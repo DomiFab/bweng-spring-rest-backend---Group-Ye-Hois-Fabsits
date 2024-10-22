@@ -1,6 +1,5 @@
 package at.technikum.springrestbackend.controller;
 
-
 import at.technikum.springrestbackend.dto.ForumPostDTO;
 import at.technikum.springrestbackend.mapper.ForumPostMapper;
 import at.technikum.springrestbackend.model.EventModel;
@@ -22,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/forumposts")
@@ -31,27 +31,29 @@ public class ForumPostController {
     private final ForumPostMapper postMapper;
     private final ForumPostServices postServices;
     private final ForumPostRepository postRepository;
-    @Autowired
-    private FileService fileService;
-    @Autowired
-    private EventServices eventServices;
-    @Autowired
-    private UserServices userServices;
+    private final FileService fileService;
+    private final EventServices eventServices;
+    private final UserServices userServices;
 
     @Autowired
     public ForumPostController(
             ForumPostMapper postMapper,
             ForumPostServices postServices,
-            ForumPostRepository postRepository) {
+            ForumPostRepository postRepository,
+            FileService fileService,
+            EventServices eventServices,
+            UserServices userServices) {
         this.postMapper = postMapper;
         this.postServices = postServices;
         this.postRepository = postRepository;
+        this.fileService = fileService;
+        this.eventServices = eventServices;
+        this.userServices = userServices;
     }
-
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.FOUND)
-    public ForumPostDTO read(@PathVariable String id) {
+    public ForumPostDTO read(@PathVariable UUID id) {
         ForumPostModel forumPost = postServices.find(id);
         return postMapper.toFullDTO(forumPost);
     }
@@ -59,21 +61,21 @@ public class ForumPostController {
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     @ResponseStatus(HttpStatus.CREATED)
     public ForumPostDTO create(@RequestPart("postData") @Valid ForumPostDTO forumPostDTO,
-                               @RequestPart("files") List<MultipartFile> files){
+                               @RequestPart("files") List<MultipartFile> files) {
         ForumPostModel forumPost = postMapper.toEntity(forumPostDTO);
         String user = SecurityUtil.getCurrentUserName();
 
-        //upload media and save post to database
-        List<MediaModel> mediaList = fileService.uploadMediaToEvent(files, forumPostDTO.getEventID(),user);
+        // Upload media and save post to database
+        List<MediaModel> mediaList = fileService.uploadMediaToEvent(files, forumPostDTO.getEventID(), user);
         forumPost.getMedia().addAll(mediaList);
         postServices.save(forumPost);
 
-        //save the post to the event
+        // Save the post to the event
         EventModel event = eventServices.find(forumPostDTO.getEventID());
         event.getEventPosts().add(forumPost);
         eventServices.save(event);
 
-        //save the post to the user
+        // Save the post to the user
         UserModel userModel = userServices.findByUsername(user);
         userModel.getCreatedPosts().add(forumPost);
         userServices.save(userModel);
@@ -83,10 +85,9 @@ public class ForumPostController {
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ForumPostDTO update(@PathVariable String id,
+    public ForumPostDTO update(@PathVariable UUID id,
                                @RequestPart("postData") @Valid ForumPostDTO updatedForumPostDTO,
-                               @RequestPart(value = "files", required = false) List<MultipartFile> files){
-
+                               @RequestPart(value = "files", required = false) List<MultipartFile> files) {
         String username = SecurityUtil.getCurrentUserName();
         return postMapper.toFullDTO(
                 postServices.update(id, updatedForumPostDTO, files, username));
@@ -94,7 +95,7 @@ public class ForumPostController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.FOUND)
-    public ResponseEntity<String> delete(@PathVariable String id){
+    public ResponseEntity<String> delete(@PathVariable UUID id) {
         String username = SecurityUtil.getCurrentUserName();
         boolean isDeleted = postServices.delete(id, username);
         return isDeleted

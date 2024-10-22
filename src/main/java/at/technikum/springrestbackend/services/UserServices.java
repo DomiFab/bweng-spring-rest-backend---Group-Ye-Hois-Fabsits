@@ -27,7 +27,7 @@ public class UserServices {
         this.userMapper = userMapper;
     }
 
-    public boolean idExists(Long id) {
+    public boolean idExists(UUID id) {
         return userRepository.existsById(id);
     }
 
@@ -39,9 +39,9 @@ public class UserServices {
         return userRepository.findByEmail(email).isPresent();
     }
 
-    public UserModel find(UUID id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
+    public UserModel find(UUID userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
     }
 
     public UserModel findByUsername(String username) {
@@ -78,7 +78,7 @@ public class UserServices {
         return userMapper.toSimpleDTO(newUser);
     }
 
-    public UserModel update(Long userID, UserDTO updatedUserDTO, String username) {
+    public UserModel update(UUID userID, UserDTO updatedUserDTO, String username) {
         // Catching the case when an entity with the id does not exist
         if (!idExists(userID)) {
             throw new EntityNotFoundException("User with provided ID [" + userID + "] not found.");
@@ -103,7 +103,7 @@ public class UserServices {
         return userRepository.save(user);
     }
 
-    public UserModel delete(Long userID, String username) {
+    public UserModel delete(UUID userID, String username) {
         UserModel user = find(userID);
         if (!user.getUsername().equals(username) && !findByUsername(username).isAdmin()) {
             throw new AccessDeniedException("You do not have permission to delete this user.");

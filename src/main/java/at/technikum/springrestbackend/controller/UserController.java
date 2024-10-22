@@ -13,6 +13,8 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/users")
 @CrossOrigin
@@ -32,21 +34,21 @@ public class UserController {
 
     @GetMapping("/{userId}")
     @ResponseStatus(HttpStatus.FOUND)
-    public UserDTO read(@PathVariable Long userId) {
+    public UserDTO read(@PathVariable UUID userId) {
         UserModel user = userServices.find(userId);
         return userMapper.toFullDTO(user);
     }
 
     @PutMapping("/{userId}")
     @ResponseStatus(HttpStatus.OK)
-    public UserDTO update(@PathVariable Long userId, @RequestBody UserDTO updatedUserDTO) {
+    public UserDTO update(@PathVariable UUID userId, @RequestBody UserDTO updatedUserDTO) {
         String username = SecurityUtil.getCurrentUserName();
         return userMapper.toFullDTO(userServices.update(userId, updatedUserDTO, username));
     }
 
     @PutMapping(value = "/{userId}/media", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     @ResponseStatus(HttpStatus.OK)
-    public UserDTO uploadProfilePicture(@PathVariable Long userId, @RequestPart("file") MultipartFile file) {
+    public UserDTO uploadProfilePicture(@PathVariable UUID userId, @RequestPart("file") MultipartFile file) {
         String authUser = SecurityUtil.getCurrentUserName();
         fileService.uploadProfilePicture(userId, file, authUser);
         UserModel updatedUser = userServices.find(userId);
@@ -55,7 +57,7 @@ public class UserController {
 
     @DeleteMapping("/{userId}")
     @ResponseStatus(HttpStatus.OK)
-    public UserDTO delete(@PathVariable Long userId) {
+    public UserDTO delete(@PathVariable UUID userId) {
         String username = SecurityUtil.getCurrentUserName();
         UserModel deletedUser = userServices.delete(userId, username);
         return userMapper.toFullDTO(deletedUser);
