@@ -1,11 +1,10 @@
 package at.technikum.springrestbackend.services;
 
 
-import at.technikum.springrestbackend.dto.EventDTO;
+import at.technikum.springrestbackend.dto.CreateEventDTO;
 import at.technikum.springrestbackend.exception.EntityNotFoundException;
 import at.technikum.springrestbackend.mapper.EventMapper;
 import at.technikum.springrestbackend.model.EventModel;
-import at.technikum.springrestbackend.model.MediaModel;
 import at.technikum.springrestbackend.model.UserModel;
 import at.technikum.springrestbackend.repository.*;
 import jakarta.persistence.EntityExistsException;
@@ -59,7 +58,7 @@ public class EventServices {
         return eventRepository.save(eventModel);
     }
 
-    public EventModel update(String id, EventDTO updatedEventDTO, List<MultipartFile> files, String userName) {
+    public EventModel update(String id, CreateEventDTO updatedEventDTO, List<MultipartFile> files, String userName) {
 
         //catching the case when an entity with the id does not exist
         if (!idExists(id)) {
@@ -76,11 +75,9 @@ public class EventServices {
         updatedEvent.setEventName(updatedEventDTO.getEventName());
         updatedEvent.setEventLocation(updatedEventDTO.getEventLocation());
         updatedEvent.setEventDate(updatedEventDTO.getEventDate());
-        updatedEvent.setEventShortDescription(updatedEventDTO.getEventShortDescription());
-        updatedEvent.setEventLongDescription(updatedEventDTO.getEventLongDescription());
 
-        List<MediaModel> mediaList = fileService.updateFrontPicture(files, updatedEvent);
-        updatedEvent.getGalleryPictures().addAll(mediaList);
+//        List<MediaModel> mediaList = fileService.updateFrontPicture(files, updatedEvent);
+//        updatedEvent.getGalleryPictures().addAll(mediaList);
 
         return eventRepository.save(updatedEvent);
     }
@@ -109,7 +106,7 @@ public class EventServices {
         return event;
     }
 
-    public EventModel addUserToEvent(String eventId, String userID) {
+    public EventModel joinEvent(String eventId, String userID) {
         // Find the event by ID
         EventModel event = find(eventId);
         // Find the user by ID
@@ -125,6 +122,7 @@ public class EventServices {
         return save(event);
     }
 
+    //for event owners and admins to block users from event
     public EventModel removeUserFromEvent(String eventID, String userID, String username){
 
         // Find the event by ID
@@ -147,6 +145,7 @@ public class EventServices {
         return save(event);
     }
 
+    //for registered users to leave event by themselves
     public EventModel leaveEvent(String eventId, String userID) {
         // Find the event by ID
         EventModel event = find(eventId);
@@ -164,27 +163,27 @@ public class EventServices {
     }
 
 
-    public boolean deletePictureFromGallery(String eventID, String mediaID, String userName){
-        MediaModel media = mediaServices.findByEventAndMedia(mediaID, eventID);
-        EventModel event = media.getEvent();
-        boolean isAdmin = userServices.findByUsername(userName).isAdmin();
+//    public boolean deletePictureFromGallery(String eventID, String mediaID, String userName){
+//        MediaModel media = mediaServices.findByEventAndMedia(mediaID, eventID);
+//        EventModel event = media.getEvent();
+//        boolean isAdmin = userServices.findByUsername(userName).isAdmin();
+//
+//        if (!media.getUploader().getUsername().equals(userName) &&
+//                !event.getCreator().getUsername().equals(userName) &&
+//                !isAdmin) {
+//            return false; // Not authorized
+//        }
+//        UserModel user = userServices.findByUsername(userName);
+//        user.getUploadedMedia().remove(media);
+//        userServices.save(user);
+//        event.getGalleryPictures().remove(media);
+//        save(event);
+//        fileService.deleteFile(media.getFileLocation());
+//        mediaRepository.delete(media);
+//        return true;
+//    }
 
-        if (!media.getUploader().getUsername().equals(userName) &&
-                !event.getCreator().getUsername().equals(userName) &&
-                !isAdmin) {
-            return false; // Not authorized
-        }
-        UserModel user = userServices.findByUsername(userName);
-        user.getUploadedMedia().remove(media);
-        userServices.save(user);
-        event.getGalleryPictures().remove(media);
-        save(event);
-        fileService.deleteFile(media.getFileLocation());
-        mediaRepository.delete(media);
-        return true;
-    }
-
-    public EventDTO getEventDetails(String eventID){
+    public CreateEventDTO getEventDetails(String eventID){
         EventModel event = find(eventID);
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated()) {

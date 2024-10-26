@@ -3,7 +3,8 @@ package at.technikum.springrestbackend.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
-import java.time.ZonedDateTime;
+
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -19,9 +20,10 @@ public class EventModel {
     @NotBlank
     private String eventLocation;
     @NotBlank
-    private ZonedDateTime eventDate; // or LocalDateTime without TimeZone
-    private String eventShortDescription;
-    private String eventLongDescription;
+    private LocalDateTime eventDate;
+    private String eventPicture;
+    private String eventDescription;
+    private String eventStatus;
     // Soft-Delete-Attribute in case deletion was an accident
     private boolean isDeleted = false;
     @NotBlank
@@ -38,38 +40,43 @@ public class EventModel {
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<MediaModel> galleryPictures = new HashSet<>();
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<ForumPostModel> eventPosts = new HashSet<>();
+    private Set<CommentModel> eventComments = new HashSet<>();
 
     // Constructor
     public EventModel() {
     }
 
-    public EventModel(String eventId, UserModel creator, String eventName, String eventLocation,
-                      ZonedDateTime eventDate, String eventShortDescription, String eventLongDescription,
-                      Set<MediaModel> galleryPictures) {
-        this.eventID = eventId;
-        this.creator = creator;
+    //Event Creation
+    public EventModel(String eventID, String eventName, String eventLocation, LocalDateTime eventDate,
+                      String eventDescription, boolean isDeleted, UserModel creator, String eventStatus,
+                      String eventPicture) {
+        this.eventID = eventID;
         this.eventName = eventName;
         this.eventLocation = eventLocation;
         this.eventDate = eventDate;
-        this.eventShortDescription = eventShortDescription;
-        this.eventLongDescription = eventLongDescription;
-        this.galleryPictures = galleryPictures;
+        this.eventDescription = eventDescription;
+        this.isDeleted = isDeleted;
+        this.creator = creator;
+        this.eventStatus = eventStatus;
+        this.eventPicture = eventPicture;
     }
 
-    public EventModel(String eventID, UserModel creator, Set<UserModel> userIDs, Set<MediaModel> galleryPictures,
-                      Set<ForumPostModel> eventPosts, String eventName, String eventLocation,
-                      ZonedDateTime eventDate, String eventShortDescription, String eventLongDescription) {
+    public EventModel(String eventID, String eventName, String eventLocation, LocalDateTime eventDate,
+                      String eventDescription, boolean isDeleted, UserModel creator, Set<UserModel> attendingUsers,
+                      Set<MediaModel> galleryPictures, Set<CommentModel> eventComments, String eventStatus,
+                      String eventPicture) {
         this.eventID = eventID;
-        this.creator = creator;
-        this.attendingUsers = userIDs;
-        this.galleryPictures = galleryPictures;
-        this.eventPosts = eventPosts;
         this.eventName = eventName;
         this.eventLocation = eventLocation;
         this.eventDate = eventDate;
-        this.eventShortDescription = eventShortDescription;
-        this.eventLongDescription = eventLongDescription;
+        this.eventDescription = eventDescription;
+        this.isDeleted = isDeleted;
+        this.creator = creator;
+        this.attendingUsers = attendingUsers;
+        this.galleryPictures = galleryPictures;
+        this.eventComments = eventComments;
+        this.eventStatus = eventStatus;
+        this.eventPicture = eventPicture;
     }
 
     public String getEventID() {
@@ -78,6 +85,62 @@ public class EventModel {
 
     public void setEventID(String eventID) {
         this.eventID = eventID;
+    }
+
+    public String getEventName() {
+        return eventName;
+    }
+
+    public void setEventName(String eventName) {
+        this.eventName = eventName;
+    }
+
+    public String getEventLocation() {
+        return eventLocation;
+    }
+
+    public void setEventLocation(String eventLocation) {
+        this.eventLocation = eventLocation;
+    }
+
+    public LocalDateTime getEventDate() {
+        return eventDate;
+    }
+
+    public void setEventDate(LocalDateTime eventDate) {
+        this.eventDate = eventDate;
+    }
+
+    public String getEventPicture() {
+        return eventPicture;
+    }
+
+    public void setEventPicture(String eventPicture) {
+        this.eventPicture = eventPicture;
+    }
+
+    public String getEventDescription() {
+        return eventDescription;
+    }
+
+    public void setEventDescription(String eventDescription) {
+        this.eventDescription = eventDescription;
+    }
+
+    public String getEventStatus() {
+        return eventStatus;
+    }
+
+    public void setEventStatus(String eventStatus) {
+        this.eventStatus = eventStatus;
+    }
+
+    public boolean isDeleted() {
+        return isDeleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        isDeleted = deleted;
     }
 
     public UserModel getCreator() {
@@ -104,59 +167,11 @@ public class EventModel {
         this.galleryPictures = galleryPictures;
     }
 
-    public Set<ForumPostModel> getEventPosts() {
-        return eventPosts;
+    public Set<CommentModel> getEventComments() {
+        return eventComments;
     }
 
-    public void setEventPosts(Set<ForumPostModel> eventPosts) {
-        this.eventPosts = eventPosts;
-    }
-
-    public String getEventName() {
-        return eventName;
-    }
-
-    public void setEventName(String eventName) {
-        this.eventName = eventName;
-    }
-
-    public String getEventLocation() {
-        return eventLocation;
-    }
-
-    public void setEventLocation(String eventLocation) {
-        this.eventLocation = eventLocation;
-    }
-
-    public ZonedDateTime getEventDate() {
-        return eventDate;
-    }
-
-    public void setEventDate(ZonedDateTime eventDate) {
-        this.eventDate = eventDate;
-    }
-
-    public String getEventShortDescription() {
-        return eventShortDescription;
-    }
-
-    public void setEventShortDescription(String eventShortDescription) {
-        this.eventShortDescription = eventShortDescription;
-    }
-
-    public String getEventLongDescription() {
-        return eventLongDescription;
-    }
-
-    public void setEventLongDescription(String eventLongDescription) {
-        this.eventLongDescription = eventLongDescription;
-    }
-
-    public boolean isDeleted() {
-        return isDeleted;
-    }
-
-    public void setDeleted(boolean deleted) {
-        isDeleted = deleted;
+    public void setEventComments(Set<CommentModel> eventComments) {
+        this.eventComments = eventComments;
     }
 }

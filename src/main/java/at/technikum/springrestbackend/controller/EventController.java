@@ -1,9 +1,8 @@
 package at.technikum.springrestbackend.controller;
 
-import at.technikum.springrestbackend.dto.EventDTO;
+import at.technikum.springrestbackend.dto.CreateEventDTO;
 import at.technikum.springrestbackend.mapper.EventMapper;
 import at.technikum.springrestbackend.model.EventModel;
-import at.technikum.springrestbackend.model.MediaModel;
 import at.technikum.springrestbackend.model.UserModel;
 import at.technikum.springrestbackend.security.SecurityUtil;
 import at.technikum.springrestbackend.services.EventServices;
@@ -42,28 +41,28 @@ public class EventController {
 
     @GetMapping("/{eventId}")
     @ResponseStatus(HttpStatus.FOUND)
-    public EventDTO read(@PathVariable String eventId) {
+    public CreateEventDTO read(@PathVariable String eventId) {
         return eventServices.getEventDetails(eventId);
     }
 
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     @ResponseStatus(HttpStatus.CREATED)
-    public EventDTO create(@RequestPart("eventData") @Valid EventDTO eventDTO,
-                           @RequestPart("files") List<MultipartFile> files) {
-        UserModel creator = userServices.find(eventDTO.getCreator().getUserID());
+    public CreateEventDTO create(@RequestPart("eventData") @Valid CreateEventDTO eventDTO,
+                                 @RequestPart("files") List<MultipartFile> files) {
+        UserModel creator = userServices.find(eventDTO.getCreatorID());
         EventModel event = eventMapper.toEntity(eventDTO, creator);
-        String username = SecurityUtil.getCurrentUserName();
-        List<MediaModel> mediaList = fileService.handleCreateEventUpload(files, event, username);
-        event.getGalleryPictures().addAll(mediaList);
+//        String username = SecurityUtil.getCurrentUserName();
+//        List<MediaModel> mediaList = fileService.handleCreateEventUpload(files, event, username);
+//        event.getGalleryPictures().addAll(mediaList);
         eventServices.save(event);
         return eventMapper.toSimpleDTO(event);
     }
 
     @PutMapping("/{eventId}")
     @ResponseStatus(HttpStatus.OK)
-    public EventDTO update(
+    public CreateEventDTO update(
             @PathVariable String eventId,
-            @RequestPart("eventData") @Valid EventDTO updatedEventDTO,
+            @RequestPart("eventData") @Valid CreateEventDTO updatedEventDTO,
             @RequestPart(value = "files", required = false) List<MultipartFile> files) {
 
         String username = SecurityUtil.getCurrentUserName();
@@ -73,21 +72,21 @@ public class EventController {
 
     @DeleteMapping("/{eventId}")
     @ResponseStatus(HttpStatus.OK)
-    public EventDTO delete(@PathVariable String eventId){
+    public CreateEventDTO delete(@PathVariable String eventId){
         String username = SecurityUtil.getCurrentUserName();
         return eventMapper.toFullDTO(eventServices.deleteFinal(eventId, username));
     }
 
     @PutMapping("/{eventId}/addUser/{userID}")
     @ResponseStatus(HttpStatus.OK)
-    public EventDTO addUserToEvent(@PathVariable String eventId, @PathVariable String userID) {
-        EventModel updatedEvent = eventServices.addUserToEvent(eventId, userID);
+    public CreateEventDTO addUserToEvent(@PathVariable String eventId, @PathVariable String userID) {
+        EventModel updatedEvent = eventServices.joinEvent(eventId, userID);
         return eventMapper.toFullDTO(updatedEvent);
     }
 
     @PutMapping("/{eventId}/removeUser/{userId}")
     @ResponseStatus(HttpStatus.OK)
-    public EventDTO removeUserFromEvent(@PathVariable String eventId, @PathVariable String userId) {
+    public CreateEventDTO removeUserFromEvent(@PathVariable String eventId, @PathVariable String userId) {
         String userName = SecurityUtil.getCurrentUserName();
         EventModel updatedEvent = eventServices.removeUserFromEvent(eventId, userId, userName);
         return eventMapper.toFullDTO(updatedEvent);
@@ -95,7 +94,7 @@ public class EventController {
 
     @PutMapping("/{eventId}/removeUser/")
     @ResponseStatus(HttpStatus.OK)
-    public EventDTO leaveEvent(@PathVariable String eventId) {
+    public CreateEventDTO leaveEvent(@PathVariable String eventId) {
         String userName = SecurityUtil.getCurrentUserName();
         EventModel updatedEvent = eventServices.leaveEvent(eventId, userName);
         return eventMapper.toFullDTO(updatedEvent);
@@ -103,12 +102,12 @@ public class EventController {
 
     @PutMapping("/{eventId}/upload")
     @ResponseStatus(HttpStatus.OK)
-    public EventDTO uploadGalleryPictures(@PathVariable String eventId,
-                                          @RequestParam("files") List<MultipartFile> files) {
+    public CreateEventDTO uploadGalleryPictures(@PathVariable String eventId,
+                                                @RequestParam("files") List<MultipartFile> files) {
         EventModel event = eventServices.find(eventId);
-        String userName = SecurityUtil.getCurrentUserName();
-        List<MediaModel> mediaList = fileService.uploadMediaToEvent(files, eventId, userName);
-        event.getGalleryPictures().addAll(mediaList);
+//        String userName = SecurityUtil.getCurrentUserName();
+//        List<MediaModel> mediaList = fileService.uploadMediaToEvent(files, eventId, userName);
+//        event.getGalleryPictures().addAll(mediaList);
         eventServices.save(event);
         return eventMapper.toFullDTO(event);
     }
@@ -117,8 +116,9 @@ public class EventController {
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<String> deletePictureFromGallery(@PathVariable String eventId,
                                                            @PathVariable String mediaId) {
-        String currentUserName = SecurityUtil.getCurrentUserName();
-        boolean isDeleted = eventServices.deletePictureFromGallery(eventId, mediaId, currentUserName);
+//        String currentUserName = SecurityUtil.getCurrentUserName();
+//        boolean isDeleted = eventServices.deletePictureFromGallery(eventId, mediaId, currentUserName);
+        boolean isDeleted = true;
         return isDeleted
                 ? ResponseEntity.ok("Picture deleted successfully.")
                 : ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authorized to delete this picture.");

@@ -1,6 +1,7 @@
 package at.technikum.springrestbackend.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "media")
@@ -8,8 +9,8 @@ public class MediaModel {
 
     @Id
     private String mediaID;
-    private String fileLocation;
-    private boolean isFrontPic = false;
+    @NotBlank
+    private String fileURL;
     @ManyToOne
     @JoinColumn(name = "fk_belong_to_event") //foreign key
     private EventModel event;
@@ -17,49 +18,16 @@ public class MediaModel {
     @JoinColumn(name = "fk_uploader")
     private UserModel uploader;
     @ManyToOne
-    @JoinColumn(name = "fk_post")
-    private ForumPostModel post;
-    @ManyToOne
     @JoinColumn(name = "fk_comment")
-    private ForumThreadModel comment;
+    private CommentModel comment;
 
     public MediaModel() {
     }
 
-    //profilepicture
-    public MediaModel(String mediaID, String fileLocation, UserModel uploader) {
+    public MediaModel(String mediaID, String fileURL, EventModel event,
+                      UserModel uploader, CommentModel comment) {
         this.mediaID = mediaID;
-        this.fileLocation = fileLocation;
-        this.uploader = uploader;
-    }
-
-
-
-    //event gallery
-    public MediaModel(String mediaID, String fileLocation, EventModel event, UserModel uploader,
-                      boolean isHeader) {
-        this.mediaID = mediaID;
-        this.fileLocation = fileLocation;
-        this.event = event;
-        this.uploader = uploader;
-        this.isFrontPic = isHeader;
-    }
-
-    //event post
-    public MediaModel(String mediaID, String fileLocation, EventModel event, UserModel uploader,
-                      ForumPostModel post) {
-        this.mediaID = mediaID;
-        this.fileLocation = fileLocation;
-        this.event = event;
-        this.uploader = uploader;
-        this.post = post;
-    }
-
-    //post comment
-    public MediaModel(String mediaID, String fileLocation, EventModel event, UserModel uploader,
-                      ForumThreadModel comment) {
-        this.mediaID = mediaID;
-        this.fileLocation = fileLocation;
+        this.fileURL = fileURL;
         this.event = event;
         this.uploader = uploader;
         this.comment = comment;
@@ -73,12 +41,12 @@ public class MediaModel {
         this.mediaID = mediaID;
     }
 
-    public String getFileLocation() {
-        return fileLocation;
+    public String getFileURL() {
+        return fileURL;
     }
 
-    public void setFileLocation(String fileLocation) {
-        this.fileLocation = fileLocation;
+    public void setFileURL(String fileURL) {
+        this.fileURL = fileURL;
     }
 
     public EventModel getEvent() {
@@ -97,27 +65,11 @@ public class MediaModel {
         this.uploader = uploader;
     }
 
-    public ForumPostModel getPost() {
-        return post;
-    }
-
-    public void setPost(ForumPostModel post) {
-        this.post = post;
-    }
-
-    public ForumThreadModel getComment() {
+    public CommentModel getComment() {
         return comment;
     }
 
-    public void setComment(ForumThreadModel comment) {
+    public void setComment(CommentModel comment) {
         this.comment = comment;
-    }
-
-    public boolean isFrontPic() {
-        return isFrontPic;
-    }
-
-    public void setFrontPic(boolean frontPic) {
-        isFrontPic = frontPic;
     }
 }

@@ -1,12 +1,10 @@
 package at.technikum.springrestbackend.controller;
 
-import at.technikum.springrestbackend.dto.EventDTO;
-import at.technikum.springrestbackend.dto.ForumPostDTO;
-import at.technikum.springrestbackend.dto.ForumThreadDTO;
+import at.technikum.springrestbackend.dto.CreateEventDTO;
+import at.technikum.springrestbackend.dto.CreateCommentDTO;
 import at.technikum.springrestbackend.dto.UserDTO;
 import at.technikum.springrestbackend.mapper.EventMapper;
-import at.technikum.springrestbackend.mapper.ForumPostMapper;
-import at.technikum.springrestbackend.mapper.ForumThreadMapper;
+import at.technikum.springrestbackend.mapper.CommentMapper;
 import at.technikum.springrestbackend.mapper.UserMapper;
 import at.technikum.springrestbackend.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,10 +22,8 @@ public class AdminController {
     private final AdminService adminService;
     private final EventServices eventServices;
     private final EventMapper eventMapper;
-    private final ForumPostServices postServices;
-    private final ForumPostMapper postMapper;
-    private final ForumThreadServices commentServices;
-    private final ForumThreadMapper commentMapper;
+    private final CommentServices postServices;
+    private final CommentMapper postMapper;
     private final UserServices userServices;
     private final UserMapper userMapper;
 
@@ -36,10 +32,8 @@ public class AdminController {
             AdminService adminService,
             EventServices eventServices,
             EventMapper eventMapper,
-            ForumPostServices postServices,
-            ForumPostMapper postMapper,
-            ForumThreadServices commentServices,
-            ForumThreadMapper commentMapper,
+            CommentServices postServices,
+            CommentMapper postMapper,
             UserServices userServices,
             UserMapper userMapper) {
         this.adminService = adminService;
@@ -47,8 +41,6 @@ public class AdminController {
         this.eventMapper = eventMapper;
         this.postServices = postServices;
         this.postMapper = postMapper;
-        this.commentServices = commentServices;
-        this.commentMapper = commentMapper;
         this.userServices = userServices;
         this.userMapper = userMapper;
     }
@@ -56,25 +48,19 @@ public class AdminController {
 
     @GetMapping("/events")
     @ResponseStatus(HttpStatus.OK)
-    public List<EventDTO> readAllEvents() {
+    public List<CreateEventDTO> readAllEvents() {
         return eventServices.findAll().stream()
                 .map(eventMapper::toFullDTO)
                 .collect(Collectors.toList());
     }
-    @GetMapping("/forumposts")
+    @GetMapping("/comments")
     @ResponseStatus(HttpStatus.OK)
-    public List<ForumPostDTO> readAllPosts() {
+    public List<CreateCommentDTO> readAllPosts() {
         return postServices.findAll().stream()
                 .map(postMapper::toFullDTO)
                 .collect(Collectors.toList());
     }
-    @GetMapping("/forumthreads")
-    @ResponseStatus(HttpStatus.OK)
-    public List<ForumThreadDTO> readAllComments() {
-        return commentServices.findAll().stream()
-                .map(commentMapper::toFullDTO)
-                .collect(Collectors.toList());
-    }
+
     @GetMapping("/users")
     @ResponseStatus(HttpStatus.OK)
     public List<UserDTO> readAll() {

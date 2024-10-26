@@ -3,7 +3,7 @@ package at.technikum.springrestbackend.services;
 import at.technikum.springrestbackend.dto.UserDTO;
 import at.technikum.springrestbackend.exception.EntityNotFoundException;
 import at.technikum.springrestbackend.mapper.UserMapper;
-import at.technikum.springrestbackend.model.ForumThreadModel;
+import at.technikum.springrestbackend.model.CommentModel;
 import at.technikum.springrestbackend.model.MediaModel;
 import at.technikum.springrestbackend.model.UserModel;
 import at.technikum.springrestbackend.repository.UserRepository;
@@ -56,25 +56,10 @@ public class UserServices {
         return userRepository.save(userModel);
     }
 
-    public UserModel saveComment(UserModel user, List<MediaModel> mediaList, ForumThreadModel comment){
+    public UserModel saveComment(UserModel user, List<MediaModel> mediaList, CommentModel comment){
         user.getCreatedComments().add(comment);
         user.getUploadedMedia().addAll(mediaList);
         return save(user);
-    }
-
-    public UserDTO registerUser(UserDTO userDTO) {
-        // Check if username or email exists
-        if (usernameExists(userDTO.getUsername())) {
-            throw new EntityExistsException("Username already exists: " + userDTO.getUsername());
-        }
-        if (emailExists(userDTO.getEmail())) {
-            throw new EntityExistsException("Email already exists: " + userDTO.getEmail());
-        }
-
-        // Convert DTO to entity and save the user
-        UserModel newUser = userMapper.toEntity(userDTO);
-        userRepository.save(newUser);
-        return userMapper.toSimpleDTO(newUser);
     }
 
     public UserModel update(String userID, UserDTO updatedUserDTO, String username){
@@ -86,20 +71,20 @@ public class UserServices {
 
         UserModel user = find(userID);
 
-        if (!user.getUsername().equals(username) &&
-                !findByUsername(username).isAdmin()) {
-            throw new AccessDeniedException("You do not have permission to update this user.");
-        }
-
-        user.setProfileDescription(updatedUserDTO.getProfileDescription());
-        if (usernameExists(updatedUserDTO.getUsername())) {
-            throw new EntityExistsException("Username already exists: " + updatedUserDTO.getUsername());
-        }
-        if (emailExists(updatedUserDTO.getEmail())) {
-            throw new EntityExistsException("Email already exists: " + updatedUserDTO.getEmail());
-        }
-        user.setUsername(updatedUserDTO.getUsername());
-        user.setEmail(updatedUserDTO.getEmail());
+//        if (!user.getUsername().equals(username) &&
+//                !findByUsername(username).isAdmin()) {
+//            throw new AccessDeniedException("You do not have permission to update this user.");
+//        }
+//
+//        user.setProfileDescription(updatedUserDTO.getProfileDescription());
+//        if (usernameExists(updatedUserDTO.getUsername())) {
+//            throw new EntityExistsException("Username already exists: " + updatedUserDTO.getUsername());
+//        }
+//        if (emailExists(updatedUserDTO.getEmail())) {
+//            throw new EntityExistsException("Email already exists: " + updatedUserDTO.getEmail());
+//        }
+//        user.setUsername(updatedUserDTO.getUsername());
+//        user.setEmail(updatedUserDTO.getEmail());
 
         return userRepository.save(user);
     }
