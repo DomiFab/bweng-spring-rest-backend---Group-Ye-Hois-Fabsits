@@ -113,15 +113,17 @@ public class FileService {
         if (file.isEmpty()) {
             throw new IllegalArgumentException("File must not be empty.");
         }
-
-        // Upload the file
+        // Delete old file
+        deleteFile(userModel.getProfilePicture().replace("http://localhost:9000/files", ""));
+        // Upload the new file
         String fileName = UUID.randomUUID().toString(); // Generate a unique file name
-        String filePath = "profile/" + fileName; // Define the path for the profile picture
+        String filePath = "/profile/" + fileName; // Define the path for the profile picture
+        String fileURL = "http://localhost:9000/files" + filePath;
 
         try {
             this.uploadFile(filePath, file.getInputStream(), file.getContentType()); // Upload the file
 
-            userModel.setProfilePicture(filePath);
+            userModel.setProfilePicture(fileURL);
             userRepository.save(userModel);
 
         } catch (Exception e) {

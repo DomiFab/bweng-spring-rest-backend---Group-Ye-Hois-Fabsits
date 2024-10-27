@@ -26,8 +26,7 @@ public class UserMapper {
     public UserDTO toSimpleDTO(UserModel userModel) {
         return new UserDTO(
                 userModel.getUserID(), userModel.getUsername(),
-                userModel.getEmail(),
-                fileService.generateSignedURL(userModel.getProfilePicture())
+                userModel.getEmail(), userModel.getProfilePicture()
         );
     }
 
