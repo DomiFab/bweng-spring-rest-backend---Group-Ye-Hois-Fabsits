@@ -1,7 +1,6 @@
 package at.technikum.springrestbackend.services;
 
 import at.technikum.springrestbackend.dto.LoginRequestDTO;
-import at.technikum.springrestbackend.dto.LoginResponseDTO;
 import at.technikum.springrestbackend.dto.RegisterDTO;
 import at.technikum.springrestbackend.mapper.UserMapper;
 import at.technikum.springrestbackend.model.UserModel;
@@ -9,7 +8,9 @@ import at.technikum.springrestbackend.repository.UserRepository;
 import at.technikum.springrestbackend.security.JwtUtil;
 import jakarta.persistence.EntityExistsException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -75,7 +76,7 @@ public class AuthenticationServices {
             UserModel user;
             UserDetails userDetails;
 
-            //login via username OR email
+            // Login via username OR email
             if (isValidEmail(login)) {
                 user = userRepository.findByEmail(login)
                         .orElseThrow(() -> new Exception("User not found"));
@@ -90,13 +91,14 @@ public class AuthenticationServices {
 
             authenticateUser(user.getUsername(), password);
 
-            //generate jwt token with isAdmin flag
             final String jwt = jwtUtil.generateToken(userDetails, user.isAdmin());
+            final HttpHeaders headers = getSuccessfulLoginHeaderResponse(jwt);
+            return ResponseEntity.ok()
+                    .headers(headers).build();
 
-            return ResponseEntity.ok(new LoginResponseDTO(jwt));
 
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }
 
@@ -117,5 +119,16 @@ public class AuthenticationServices {
             // Throw an exception if authentication fails
             throw new Exception("Invalid credentials", e);
         }
+    }
+
+    private HttpHeaders getSuccessfulLoginHeaderResponse(String jwt) {
+        ResponseCookie jwtCookie = ResponseCookie.from("jwt", jwt)
+                .httpOnly(true)
+                .path("/")
+                .maxAge(24 * 60 * 60)
+                .build();
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.SET_COOKIE, jwtCookie.toString());
+        return headers;
     }
 }
