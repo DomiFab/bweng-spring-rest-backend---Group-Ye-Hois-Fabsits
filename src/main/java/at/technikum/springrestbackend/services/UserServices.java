@@ -1,5 +1,6 @@
 package at.technikum.springrestbackend.services;
 
+import at.technikum.springrestbackend.dto.ResetPasswordDTO;
 import at.technikum.springrestbackend.dto.UserDTO;
 import at.technikum.springrestbackend.exception.EntityNotFoundException;
 import at.technikum.springrestbackend.mapper.UserMapper;
@@ -9,7 +10,12 @@ import at.technikum.springrestbackend.model.UserModel;
 import at.technikum.springrestbackend.repository.UserRepository;
 import jakarta.persistence.EntityExistsException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,6 +25,8 @@ public class UserServices {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
     public UserServices(UserRepository userRepository, UserMapper userMapper) {
@@ -38,7 +46,7 @@ public class UserServices {
         return userRepository.findByEmail(email).isPresent();
     }
 
-    public UserModel find(String id) {
+    public UserModel findByID(String id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new EntityExistsException("User not found with id: " + id));
     }
@@ -62,41 +70,50 @@ public class UserServices {
         return save(user);
     }
 
-    public UserModel update(String userID, UserDTO updatedUserDTO, String username){
+    public UserModel update(UserDTO updatedUserDTO, String username){
 
-        //catching the case when an entity with the id does not exist
-        if (!idExists(userID)){
-            throw new EntityNotFoundException("User with provided ID [" + userID + "] not found.");
+        UserModel user = findByUsername(username);
+
+        if (usernameExists(updatedUserDTO.getUsername())) {
+            throw new EntityExistsException("Username already exists: " + updatedUserDTO.getUsername());
         }
-
-        UserModel user = find(userID);
-
-//        if (!user.getUsername().equals(username) &&
-//                !findByUsername(username).isAdmin()) {
-//            throw new AccessDeniedException("You do not have permission to update this user.");
-//        }
-//
-//        user.setProfileDescription(updatedUserDTO.getProfileDescription());
-//        if (usernameExists(updatedUserDTO.getUsername())) {
-//            throw new EntityExistsException("Username already exists: " + updatedUserDTO.getUsername());
-//        }
-//        if (emailExists(updatedUserDTO.getEmail())) {
-//            throw new EntityExistsException("Email already exists: " + updatedUserDTO.getEmail());
-//        }
-//        user.setUsername(updatedUserDTO.getUsername());
-//        user.setEmail(updatedUserDTO.getEmail());
+        if (emailExists(updatedUserDTO.getEmail())) {
+            throw new EntityExistsException("Email already exists: " + updatedUserDTO.getEmail());
+        }
+        user.setUsername(updatedUserDTO.getUsername());
+        user.setEmail(updatedUserDTO.getEmail());
 
         return userRepository.save(user);
     }
 
-    public UserModel delete(String userID, String username){
-        UserModel user = find(userID);
+    public ResponseEntity<?> changePassword (ResetPasswordDTO resetPasswordDTO){
+        // Get the current authenticated user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName(); // Get current user's username
+
+        // Retrieve the current user from the database
+        UserModel currentUser = findByUsername(currentUsername);
+
+        // Check if the old password matches
+        if (!passwordEncoder.matches(resetPasswordDTO.getOldPassword(), currentUser.getPassword())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Old password is incorrect.");
+        }
+
+        // Encode the new password and update the user record
+        currentUser.setPassword(passwordEncoder.encode(resetPasswordDTO.getNewPassword()));
+        save(currentUser);
+
+        return ResponseEntity.ok("Password updated successfully.");
+    }
+
+    public ResponseEntity<?> delete(String userID, String username){
+        UserModel user = findByID(userID);
         if (!user.getUsername().equals(username) &&
                 !findByUsername(username).isAdmin()) {
             throw new AccessDeniedException("You do not have permission to update this user.");
         }
         userRepository.delete(user);
-        return user;
+        return ResponseEntity.ok("User was successfully deleted.");
     }
 
 }

@@ -11,6 +11,7 @@ public class DisplayEventDTO {
     @NotBlank
     @Valid
     private UserDTO creator;
+    private boolean isCreator;
     @NotBlank
     private String eventLocation;
     @NotBlank
@@ -29,7 +30,7 @@ public class DisplayEventDTO {
     //ABGESPECKT, weil Media, Comment (Attendees) separat geladen werden!
     public DisplayEventDTO(String eventID, String eventName, String eventLocation, LocalDateTime eventDate,
                     String eventStatus, String eventDescription, String eventPicture,
-                    boolean isDeleted, UserDTO creator, Long attendeeCount) {
+                    boolean isDeleted, UserDTO creator, boolean isCreator, Long attendeeCount) {
         this.eventID = eventID;
         this.eventName = eventName;
         this.eventLocation = eventLocation;
@@ -39,6 +40,7 @@ public class DisplayEventDTO {
         this.eventPicture = eventPicture;
         this.isDeleted = isDeleted;
         this.creator = creator;
+        this.isCreator = isCreator;
         this.attendeeCount = attendeeCount;
     }
 
@@ -120,5 +122,13 @@ public class DisplayEventDTO {
 
     public void setDeleted(boolean deleted) {
         isDeleted = deleted;
+    }
+
+    public boolean isCreator() {
+        return isCreator;
+    }
+
+    public void setCreator(boolean creator) {
+        isCreator = creator;
     }
 }

@@ -3,6 +3,7 @@ package at.technikum.springrestbackend.mapper;
 import at.technikum.springrestbackend.dto.RegisterDTO;
 import at.technikum.springrestbackend.dto.UserDTO;
 import at.technikum.springrestbackend.model.UserModel;
+import at.technikum.springrestbackend.services.FileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -13,6 +14,8 @@ import java.util.UUID;
 public class UserMapper {
 
     private final PasswordEncoder passwordEncoder;
+    @Autowired
+    private FileService fileService;
 
     @Autowired
     public UserMapper(PasswordEncoder passwordEncoder) {
@@ -21,10 +24,10 @@ public class UserMapper {
 
 
     public UserDTO toSimpleDTO(UserModel userModel) {
-
         return new UserDTO(
                 userModel.getUserID(), userModel.getUsername(),
-                userModel.getEmail(), userModel.getProfilePicture()
+                userModel.getEmail(),
+                fileService.generateSignedURL(userModel.getProfilePicture())
         );
     }
 

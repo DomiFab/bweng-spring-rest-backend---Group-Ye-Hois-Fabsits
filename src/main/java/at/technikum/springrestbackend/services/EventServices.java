@@ -2,6 +2,7 @@ package at.technikum.springrestbackend.services;
 
 
 import at.technikum.springrestbackend.dto.CreateEventDTO;
+import at.technikum.springrestbackend.dto.DisplayEventDTO;
 import at.technikum.springrestbackend.exception.EntityNotFoundException;
 import at.technikum.springrestbackend.mapper.EventMapper;
 import at.technikum.springrestbackend.model.EventModel;
@@ -15,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,6 +54,20 @@ public class EventServices {
 
     public List<EventModel> findAll (){
         return eventRepository.findAll();
+    }
+
+    public List<DisplayEventDTO> getEventsFromUser (UserModel userModel){
+
+        List<DisplayEventDTO> events = new ArrayList<>();
+        //attending events
+        for (EventModel event : userModel.getAttendingEvents()){
+            events.add(eventMapper.toDisplayDTO(event, userModel.getUserID()));
+        }
+        for (EventModel event : userModel.getCreatedEvents()){
+            events.add(eventMapper.toDisplayDTO(event, userModel.getUserID()));
+        }
+
+        return events;
     }
 
     public EventModel save(EventModel eventModel){
@@ -110,7 +126,7 @@ public class EventServices {
         // Find the event by ID
         EventModel event = find(eventId);
         // Find the user by ID
-        UserModel user = userServices.find(userID);
+        UserModel user = userServices.findByID(userID);
 
         // Add user to event's attending users
         event.getAttendingUsers().add(user);
@@ -128,7 +144,7 @@ public class EventServices {
         // Find the event by ID
         EventModel event = find(eventID);
         // Find the user by ID
-        UserModel user = userServices.find(userID);
+        UserModel user = userServices.findByID(userID);
 
         if (!event.getCreator().getUsername().equals(username) &&
                 !userServices.findByUsername(username).isAdmin()) {
@@ -150,7 +166,7 @@ public class EventServices {
         // Find the event by ID
         EventModel event = find(eventId);
         // Find the user by ID
-        UserModel user = userServices.find(userID);
+        UserModel user = userServices.findByID(userID);
 
         // Add user to event's attending users
         event.getAttendingUsers().remove(user);
@@ -161,27 +177,6 @@ public class EventServices {
         userServices.save(user);
         return save(event);
     }
-
-
-//    public boolean deletePictureFromGallery(String eventID, String mediaID, String userName){
-//        MediaModel media = mediaServices.findByEventAndMedia(mediaID, eventID);
-//        EventModel event = media.getEvent();
-//        boolean isAdmin = userServices.findByUsername(userName).isAdmin();
-//
-//        if (!media.getUploader().getUsername().equals(userName) &&
-//                !event.getCreator().getUsername().equals(userName) &&
-//                !isAdmin) {
-//            return false; // Not authorized
-//        }
-//        UserModel user = userServices.findByUsername(userName);
-//        user.getUploadedMedia().remove(media);
-//        userServices.save(user);
-//        event.getGalleryPictures().remove(media);
-//        save(event);
-//        fileService.deleteFile(media.getFileLocation());
-//        mediaRepository.delete(media);
-//        return true;
-//    }
 
     public CreateEventDTO getEventDetails(String eventID){
         EventModel event = find(eventID);

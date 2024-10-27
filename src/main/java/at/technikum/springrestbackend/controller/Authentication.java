@@ -1,6 +1,5 @@
 package at.technikum.springrestbackend.controller;
 
-
 import at.technikum.springrestbackend.dto.LoginRequestDTO;
 import at.technikum.springrestbackend.dto.RegisterDTO;
 import at.technikum.springrestbackend.services.AuthenticationServices;
@@ -26,7 +25,6 @@ public class Authentication {
     public ResponseEntity<?> createAuthenticationToken(@RequestBody LoginRequestDTO loginRequestDTO) {
         return authenticationService.login(loginRequestDTO);
     }
-
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)

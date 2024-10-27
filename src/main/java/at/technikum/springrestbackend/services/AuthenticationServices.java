@@ -12,8 +12,11 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -131,4 +134,30 @@ public class AuthenticationServices {
         headers.add(HttpHeaders.SET_COOKIE, jwtCookie.toString());
         return headers;
     }
+
+    public void isProfileOwner(String profileUsername) throws AccessDeniedException {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null && authentication.isAuthenticated()) {
+            // Get username of current logged-in user
+            String currentUsername = authentication.getName();
+            String jwt = (String) authentication.getCredentials();
+
+            // Extract isAdmin from JWT
+            boolean isAdmin = jwtUtil.extractIsAdmin(jwt);
+
+            // Check if the current user is either the owner of the profile or an admin
+            if (!currentUsername.equals(profileUsername) && !isAdmin) {
+                throw new AccessDeniedException("You do not have permission to access this profile.");
+            }
+        } else {
+            throw new AccessDeniedException("No authentication information found.");
+        }
+    }
+
+    public void isEventCreator(){
+
+    }
+
 }

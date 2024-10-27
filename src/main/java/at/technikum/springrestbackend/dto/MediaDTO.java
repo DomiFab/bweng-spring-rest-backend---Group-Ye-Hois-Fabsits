@@ -12,7 +12,6 @@ public class MediaDTO {
     @NotBlank
     @Valid
     private UserDTO uploader;
-    @NotBlank
     private String commentID;
 
     public MediaDTO() {
@@ -23,6 +22,38 @@ public class MediaDTO {
         this.mediaID = mediaID;
         this.filePath = filePath;
         this.uploader = uploader;
+        this.commentID = commentID;
+    }
+
+    public String getMediaID() {
+        return mediaID;
+    }
+
+    public void setMediaID(String mediaID) {
+        this.mediaID = mediaID;
+    }
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+    }
+
+    public UserDTO getUploader() {
+        return uploader;
+    }
+
+    public void setUploader(UserDTO uploader) {
+        this.uploader = uploader;
+    }
+
+    public String getCommentID() {
+        return commentID;
+    }
+
+    public void setCommentID(String commentID) {
         this.commentID = commentID;
     }
 }

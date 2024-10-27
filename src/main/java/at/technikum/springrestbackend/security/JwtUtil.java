@@ -38,7 +38,9 @@ public class JwtUtil {
     public String generateToken(UserDetails userDetails, boolean isAdmin) {
 
         Map<String, Object> claims = new HashMap<>();
-        claims.put("isAdmin", isAdmin); // Add isAdmin flag to the claims
+
+        // Add isAdmin flag and userID to the claims
+        claims.put("isAdmin", isAdmin);
 
         return createToken(claims, userDetails.getUsername());
     }
@@ -70,4 +72,5 @@ public class JwtUtil {
         Claims claims = extractAllClaims(token);
         return (Boolean) claims.get("isAdmin");
     }
+
 }

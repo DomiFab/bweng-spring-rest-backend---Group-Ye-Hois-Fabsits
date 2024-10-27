@@ -2,19 +2,21 @@ package at.technikum.springrestbackend.mapper;
 
 import at.technikum.springrestbackend.dto.MediaDTO;
 import at.technikum.springrestbackend.model.MediaModel;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 
 @Component
 public class MediaMapper {
 
+    @Autowired
+    private UserMapper userMapper;
 
-    public MediaDTO toSimpleDTO (MediaModel media){
+    public MediaDTO toDTO(MediaModel media){
         return new MediaDTO(
-//                media.getMediaID(), media.getFileLocation(),
-//                media.getEvent().getEventID(),
-//                userUtility.toSimpleDTO(media.getUploader()),
-//                media.isFrontPic()
+                media.getMediaID(), media.getFileURL(),
+                userMapper.toSimpleDTO(media.getUploader()),
+                media.getComment().getCommentID()
         );
     }
 }

@@ -13,8 +13,8 @@ public class UserDTO {
     private boolean isDeleted = false;  // Hinzugefügt: Kennzeichnet, ob der Benutzer gelöscht ist
     private boolean isAdmin = false;
     private String profilePicture;
-    private Set<CreateEventDTO> attendingEvents = new HashSet<>();
-    private Set<CreateEventDTO> createdEvents = new HashSet<>();
+    private Set<DisplayEventDTO> attendingEvents = new HashSet<>();
+    private Set<DisplayEventDTO> createdEvents = new HashSet<>();
     private Set<CreateCommentDTO> createdComments = new HashSet<>();
     private Set<MediaDTO> uploadedMedia = new HashSet<>();
 
@@ -27,12 +27,6 @@ public class UserDTO {
         this.username = username;
         this.email = email;
         this.profilePicture = profilePicture;
-    }
-
-    //GET UserEventsDTO
-    public UserDTO(Set<CreateEventDTO> attendingEvents, Set<CreateEventDTO> createdEvents) {
-        this.attendingEvents = attendingEvents;
-        this.createdEvents = createdEvents;
     }
 
     //GET UserMediaDTO
@@ -88,19 +82,19 @@ public class UserDTO {
         this.profilePicture = profilePicture;
     }
 
-    public Set<CreateEventDTO> getAttendingEvents() {
+    public Set<DisplayEventDTO> getAttendingEvents() {
         return attendingEvents;
     }
 
-    public void setAttendingEvents(Set<CreateEventDTO> attendingEvents) {
+    public void setAttendingEvents(Set<DisplayEventDTO> attendingEvents) {
         this.attendingEvents = attendingEvents;
     }
 
-    public Set<CreateEventDTO> getCreatedEvents() {
+    public Set<DisplayEventDTO> getCreatedEvents() {
         return createdEvents;
     }
 
-    public void setCreatedEvents(Set<CreateEventDTO> createdEvents) {
+    public void setCreatedEvents(Set<DisplayEventDTO> createdEvents) {
         this.createdEvents = createdEvents;
     }
 

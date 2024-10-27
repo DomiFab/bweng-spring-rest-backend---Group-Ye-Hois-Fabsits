@@ -1,15 +1,15 @@
 package at.technikum.springrestbackend.services;
 
-import at.technikum.springrestbackend.exception.EntityNotFoundException;
 import at.technikum.springrestbackend.model.*;
 import at.technikum.springrestbackend.repository.EventRepository;
 import at.technikum.springrestbackend.repository.CommentRepository;
 import at.technikum.springrestbackend.repository.MediaRepository;
+import at.technikum.springrestbackend.repository.UserRepository;
 import io.minio.*;
 import io.minio.errors.MinioException;
+import io.minio.http.Method;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,11 +25,11 @@ public class FileService {
     @Value("${BUCKET_NAME}")
     private String bucketName;
     @Autowired
-    private UserServices userServices;
-    @Autowired
     private EventRepository eventRepository;
     @Autowired
     private CommentRepository postRepository;
+    @Autowired
+    private UserRepository userRepository;
 
     public FileService(@Value("${BUCKET_HOST}") String bucketHost,
                        @Value("${BUCKET_PORT}") int bucketPort,
@@ -108,35 +108,40 @@ public class FileService {
     }
 
 
-    public String uploadProfilePicture(String userID, MultipartFile file, String authUser) {
+    public void uploadProfilePicture(MultipartFile file, UserModel userModel) {
         // Validate the input file
         if (file.isEmpty()) {
             throw new IllegalArgumentException("File must not be empty.");
         }
-        if (!userServices.find(userID).getUsername().equals(authUser)){
-            throw new AccessDeniedException("You do not have the authority to change this Profile Picture");
-        }
-        // Find the user by ID
-        UserModel user = userServices.find(userID); // Assuming you have this method in userServices
-        if (user == null) {
-            throw new EntityNotFoundException("User not found with ID: " + userID);
-        }
 
         // Upload the file
         String fileName = UUID.randomUUID().toString(); // Generate a unique file name
-        String filePath = "/profile/uploads/" + fileName; // Define the path for the profile picture
+        String filePath = "profile/" + fileName; // Define the path for the profile picture
 
         try {
             this.uploadFile(filePath, file.getInputStream(), file.getContentType()); // Upload the file
+
+            userModel.setProfilePicture(filePath);
+            userRepository.save(userModel);
+
         } catch (Exception e) {
             throw new RuntimeException("Error uploading file: " + file.getOriginalFilename(), e);
         }
+    }
 
-        // Update the user's profile picture
-        user.setProfilePicture(filePath);
-        userServices.save(user); // Save the updated user
-
-        return filePath; // Return the file path if needed
+    public String generateSignedURL(String objectName) {
+        try {
+            return minioClient.getPresignedObjectUrl(
+                    GetPresignedObjectUrlArgs.builder()
+                            .bucket(bucketName)
+                            .object(objectName)
+                            .method(Method.GET)
+                            .expiry(60 * 60 * 5)
+                            .build()
+            );
+        } catch (Exception e) {
+            return "Error generating pre-signed URL: " + e.getMessage();
+        }
     }
 
 //    public List<MediaModel> uploadMediaToComment(List<MultipartFile> files, ForumThreadModel comment, String username){

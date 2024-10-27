@@ -1,6 +1,7 @@
 package at.technikum.springrestbackend.mapper;
 
 import at.technikum.springrestbackend.dto.CreateEventDTO;
+import at.technikum.springrestbackend.dto.DisplayEventDTO;
 import at.technikum.springrestbackend.model.EventModel;
 import at.technikum.springrestbackend.model.UserModel;
 import at.technikum.springrestbackend.services.MediaServices;
@@ -22,6 +23,20 @@ public class EventMapper {
         this.mediaServices = mediaServices;
         this.forumPostMapper = forumPostMapper;
         this.mediaMapper = mediaMapper;
+    }
+
+    public DisplayEventDTO toDisplayDTO (EventModel eventModel, String userID) {
+
+        boolean isCreator = eventModel.getCreator().getUserID().equals(userID);
+
+        return new DisplayEventDTO(
+                eventModel.getEventID(), eventModel.getEventName(),
+                eventModel.getEventLocation(), eventModel.getEventDate(),
+                eventModel.getEventStatus(), eventModel.getEventDescription(),
+                eventModel.getEventPicture(), eventModel.isDeleted(),
+                userMapper.toSimpleDTO(eventModel.getCreator()),
+                isCreator, (long) eventModel.getAttendingUsers().size()
+        );
     }
 
     //creating event

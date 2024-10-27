@@ -49,7 +49,7 @@ public class EventController {
     @ResponseStatus(HttpStatus.CREATED)
     public CreateEventDTO create(@RequestPart("eventData") @Valid CreateEventDTO eventDTO,
                                  @RequestPart("files") List<MultipartFile> files) {
-        UserModel creator = userServices.find(eventDTO.getCreatorID());
+        UserModel creator = userServices.findByID(eventDTO.getCreatorID());
         EventModel event = eventMapper.toEntity(eventDTO, creator);
 //        String username = SecurityUtil.getCurrentUserName();
 //        List<MediaModel> mediaList = fileService.handleCreateEventUpload(files, event, username);
