@@ -9,6 +9,7 @@ public class MediaDTO {
     @NotBlank
     @Valid
     private String filePath;
+    private String eventID;
     @NotBlank
     @Valid
     private UserDTO uploader;
@@ -18,9 +19,11 @@ public class MediaDTO {
     }
 
     //DisplayMediaDTO
-    public MediaDTO(String mediaID, String filePath, UserDTO uploader, String commentID) {
+    public MediaDTO(String mediaID, String filePath,
+                    String eventID, UserDTO uploader, String commentID) {
         this.mediaID = mediaID;
         this.filePath = filePath;
+        this.eventID = eventID;
         this.uploader = uploader;
         this.commentID = commentID;
     }
@@ -55,5 +58,13 @@ public class MediaDTO {
 
     public void setCommentID(String commentID) {
         this.commentID = commentID;
+    }
+
+    public String getEventID() {
+        return eventID;
+    }
+
+    public void setEventID(String eventID) {
+        this.eventID = eventID;
     }
 }

@@ -148,14 +148,14 @@ public class FileService {
     public void updateFrontPicture(MultipartFile file, EventModel event) {
         try {
             if (file.isEmpty()) {
-                removeOldMediaData(event);
+                removeOldFrontPictureData(event);
                 return;
             }
             // Delete old Front Picture
-            removeOldMediaData(event);
+            removeOldFrontPictureData(event);
 
             String fileName = UUID.randomUUID().toString(); // Generate unique file name
-            String filePath = "/event/uploads/" + fileName;
+            String filePath = "/event/" + fileName;
             String fileURL = "http://localhost:9000/files" + filePath;
             this.uploadFile(filePath, file.getInputStream(), file.getContentType());
 
@@ -171,15 +171,44 @@ public class FileService {
         }
     }
 
-    private void removeOldMediaData(EventModel event) {
+    public void updateCommentMedia(List<MultipartFile> files, CommentModel commentModel,
+                                   EventModel eventModel, UserModel author) {
+
+        // Delete old Medias
+        if (files.isEmpty()) {
+            removeOldCommentPictures(eventModel, commentModel, author);
+            return;
+        }
+        removeOldCommentPictures(eventModel, commentModel, author);
+
+        for (MultipartFile file : files) {
+            try {
+                String fileName = UUID.randomUUID().toString(); // Generate unique file name
+                String filePath = "/event/uploads/" + fileName;
+                String fileURL = "http://localhost:9000/files" + filePath;
+                MediaModel media = new MediaModel(fileName, fileURL, eventModel, author, commentModel);
+
+                uploadFile(filePath, file.getInputStream(), file.getContentType());
+
+                commentModel.getMedia().add(media);
+                eventModel.getGalleryPictures().add(media);
+                author.getUploadedMedia().add(media);
+                mediaRepository.save(media);
+                commentRepository.save(commentModel);
+                eventRepository.save(eventModel);
+                userRepository.save(author);
+            } catch (Exception e) {
+                throw new RuntimeException("Error uploading files " + file.getOriginalFilename(), e);
+            }
+        }
+    }
+
+    private void removeOldFrontPictureData(EventModel event) {
+
+        MediaModel media = mediaRepository.findByFileURL(event.getEventPicture());
 
         mediaRepository.deleteByFileURL(event.getEventPicture());
-
-        event.getCreator()
-                .getUploadedMedia()
-                .remove(
-                        mediaRepository.findByFileURL(event.getEventPicture())
-                );
+        event.getCreator().getUploadedMedia().remove(media);
         event.setEventPicture("");
 
         eventRepository.save(event);
@@ -187,125 +216,21 @@ public class FileService {
 
         deleteFile(event.getEventPicture().replace("http://localhost:9000/files", ""));
     }
-//    public List<MediaModel> uploadMediaToComment(List<MultipartFile> files, ForumThreadModel comment, String username){
-//        if (username == null || username.isEmpty()) {
-//            throw new AccessDeniedException("You need to be logged in to comment.");
-//        }
-//        // Find the user who is posting the comment
-//        UserModel user = userServices.findByUsername(username);
-//        List<MediaModel> mediaList = new ArrayList<>();
-//        for (MultipartFile file : files) {
-//            try {
-//                String fileName = UUID.randomUUID().toString();
-//                String filePath = "/comment/uploads/" + fileName;
-//                this.uploadFile(filePath, file.getInputStream(), file.getContentType());
-//
-//                CommentModel post = postRepository.findById(comment.getPost().getId())
-//                        .orElseThrow(() -> new EntityNotFoundException("No post found"));
-//
-//                EventModel event = eventRepository.findById(post.getEvent().getEventID())
-//                        .orElseThrow(() -> new EntityNotFoundException("No event found"));
-//
-//                MediaModel media = new MediaModel(fileName, filePath, event, user, comment);
-//                mediaRepository.save(media);
-//                mediaList.add(media);
-//            } catch (Exception e) {
-//                throw new RuntimeException("Error uploading file: " + file.getOriginalFilename(), e);
-//            }
-//        }
-//        comment.getMedia().addAll(mediaList);
-//        userServices.saveComment(user, mediaList, comment);
-//        commentRepository.save(comment);  // Save the updated comment with media
-//        return mediaList;
-//    }
-//
-//    public List<MediaModel> updateCommentMedia(List<MultipartFile> files, ForumThreadModel comment){
-//        List<MediaModel> mediaModelList = new ArrayList<>();
-//        if (!files.isEmpty()) {
-//            // First, remove the old media associated with the post
-//            List<MediaModel> existingMedia = comment.getMedia().stream().toList();
-//            for (MediaModel media : existingMedia) {
-//                this.deleteFile(media.getFileLocation()); // Delete the file from MinIO
-//                mediaRepository.delete(media); // Delete the media record from the DB
-//            }
-//            // Now, upload new media files
-//            for (MultipartFile file : files) {
-//                try {
-//                    String fileName = UUID.randomUUID().toString(); // Generate unique file name
-//                    String filePath = "/comment/uploads/" + fileName;
-//                    this.uploadFile(filePath, file.getInputStream(), file.getContentType());
-//
-//                    CommentModel post = postRepository.findById(comment.getPost().getId())
-//                            .orElseThrow(() -> new EntityNotFoundException("No post found"));
-//
-//                    EventModel event = eventRepository.findById(post.getEvent().getEventID())
-//                            .orElseThrow(() -> new EntityNotFoundException("No event found"));
-//                    MediaModel newMedia = new MediaModel(fileName, filePath, event, comment.getAuthor(), comment);
-//                    mediaRepository.save(newMedia);
-//                    mediaModelList.add(newMedia);
-//                } catch (Exception e) {
-//                    throw new RuntimeException("Error uploading file: " + file.getOriginalFilename(), e);
-//                }
-//            }
-//        }
-//        return mediaModelList;
-//    }
-//
-//    public List<MediaModel> updatePostMedia(List<MultipartFile> files, CommentModel post){
-//        List<MediaModel> mediaModelList = new ArrayList<>();
-//        if (!files.isEmpty()) {
-//            // First, remove the old media associated with the post
-//            List<MediaModel> existingMedia = post.getMedia().stream().toList();
-//            for (MediaModel media : existingMedia) {
-//                this.deleteFile(media.getFileLocation()); // Delete the file from MinIO
-//                mediaRepository.delete(media); // Delete the media record from the DB
-//            }
-//            // Now, upload new media files
-//            for (MultipartFile file : files) {
-//                try {
-//                    String fileName = UUID.randomUUID().toString(); // Generate unique file name
-//                    String filePath = "/post/uploads/" + fileName;
-//                    this.uploadFile(filePath, file.getInputStream(), file.getContentType());
-//                    MediaModel newMedia = new MediaModel(fileName, filePath, post.getEvent(), post.getAuthor(), post);
-//                    mediaRepository.save(newMedia);
-//                    mediaModelList.add(newMedia);
-//                } catch (Exception e) {
-//                    throw new RuntimeException("Error uploading file: " + file.getOriginalFilename(), e);
-//                }
-//            }
-//        }
-//        return mediaModelList;
-//    }
-//
-//
-//    public List<MediaModel> uploadMediaToEvent(List<MultipartFile> files, String eventID, String userName) {
-//        EventModel event = eventRepository.findById(eventID)
-//                .orElseThrow(() -> new EntityNotFoundException("No event found"));
-//
-//        UserModel user = userServices.findByUsername(userName);
-//        return uploadFiles(files, event, user, false);
-//    }
-//
-//    public List<MediaModel> updateFrontPicture(List<MultipartFile> files, EventModel event) {
-//        List<MediaModel> mediaModelList = new ArrayList<>();
-//
-//        if (!files.isEmpty()) {
-//            // Handle removal of the current front picture if it exists
-//            Optional<MediaModel> currentFrontPicture = event.getGalleryPictures().stream()
-//                    .filter(MediaModel::isFrontPic) // Find the current front picture
-//                    .findFirst();
-//
-//            currentFrontPicture.ifPresent(oldFrontPicture -> {
-//                oldFrontPicture.setFrontPic(false); // Set old front picture as not front
-//                this.deleteFile(oldFrontPicture.getFileLocation());
-//                event.getGalleryPictures().remove(oldFrontPicture);
-//            });
-//
-//            // Upload new pictures
-//            mediaModelList.addAll(uploadFiles(files, event, event.getCreator(), true));
-//        }
-//        return mediaModelList;
-//    }
-//
 
+    private void removeOldCommentPictures(EventModel event, CommentModel comment, UserModel author) {
+
+        for (MediaModel media : comment.getMedia()) {
+
+            event.getGalleryPictures().remove(media);
+            comment.getMedia().remove(media);
+            author.getUploadedMedia().remove(media);
+
+            deleteFile(media.getFileURL().replace("http://localhost:9000/files", ""));
+        }
+
+        mediaRepository.deleteAllByComment(comment);
+        eventRepository.save(event);
+        commentRepository.save(comment);
+        userRepository.save(author);
+    }
 }

@@ -13,7 +13,8 @@ public class CommentModel {
     private String commentID;
     private String title;
     private String content;
-    private boolean isDeleted;
+    private String isReplyToCommentID;
+    private boolean isDeleted = false;
     @Valid
     @NotBlank
     @ManyToOne
@@ -31,7 +32,15 @@ public class CommentModel {
     }
 
     //for creating post
-
+    public CommentModel(String commentID, String title, String content,
+                        String isReplyToCommentID, UserModel author, EventModel event) {
+        this.commentID = commentID;
+        this.title = title;
+        this.content = content;
+        this.isReplyToCommentID = isReplyToCommentID;
+        this.author = author;
+        this.event = event;
+    }
 
     public CommentModel(String commentID, String title, String content,
                         boolean isDeleted, UserModel author, EventModel event, Set<MediaModel> media) {
@@ -98,5 +107,13 @@ public class CommentModel {
 
     public void setMedia(Set<MediaModel> media) {
         this.media = media;
+    }
+
+    public String getIsReplyToCommentID() {
+        return isReplyToCommentID;
+    }
+
+    public void setIsReplyToCommentID(String isReplyToCommentID) {
+        this.isReplyToCommentID = isReplyToCommentID;
     }
 }

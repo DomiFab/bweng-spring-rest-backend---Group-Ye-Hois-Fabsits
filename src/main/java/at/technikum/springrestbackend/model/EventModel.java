@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -19,8 +18,6 @@ public class EventModel {
     private String eventName;
     @NotBlank
     private String eventLocation;
-    @NotBlank
-    private LocalDateTime eventDate;
     private String eventPicture;
     private String eventDescription;
     private String eventStatus;
@@ -47,25 +44,23 @@ public class EventModel {
     }
 
     //Event Creation
-    public EventModel(String eventID, String eventName, String eventLocation, LocalDateTime eventDate,
+    public EventModel(String eventID, String eventName, String eventLocation,
                       String eventDescription, UserModel creator, String eventStatus) {
         this.eventID = eventID;
         this.eventName = eventName;
         this.eventLocation = eventLocation;
-        this.eventDate = eventDate;
         this.eventDescription = eventDescription;
         this.creator = creator;
         this.eventStatus = eventStatus;
     }
 
-    public EventModel(String eventID, String eventName, String eventLocation, LocalDateTime eventDate,
+    public EventModel(String eventID, String eventName, String eventLocation,
                       String eventDescription, boolean isDeleted, UserModel creator, Set<UserModel> attendingUsers,
                       Set<MediaModel> galleryPictures, Set<CommentModel> eventComments, String eventStatus,
                       String eventPicture) {
         this.eventID = eventID;
         this.eventName = eventName;
         this.eventLocation = eventLocation;
-        this.eventDate = eventDate;
         this.eventDescription = eventDescription;
         this.isDeleted = isDeleted;
         this.creator = creator;
@@ -98,14 +93,6 @@ public class EventModel {
 
     public void setEventLocation(String eventLocation) {
         this.eventLocation = eventLocation;
-    }
-
-    public LocalDateTime getEventDate() {
-        return eventDate;
-    }
-
-    public void setEventDate(LocalDateTime eventDate) {
-        this.eventDate = eventDate;
     }
 
     public String getEventPicture() {

@@ -3,7 +3,6 @@ package at.technikum.springrestbackend.mapper;
 import at.technikum.springrestbackend.dto.RegisterDTO;
 import at.technikum.springrestbackend.dto.UserDTO;
 import at.technikum.springrestbackend.model.UserModel;
-import at.technikum.springrestbackend.services.FileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -14,8 +13,6 @@ import java.util.UUID;
 public class UserMapper {
 
     private final PasswordEncoder passwordEncoder;
-    @Autowired
-    private FileService fileService;
 
     @Autowired
     public UserMapper(PasswordEncoder passwordEncoder) {
@@ -27,6 +24,16 @@ public class UserMapper {
         return new UserDTO(
                 userModel.getUserID(), userModel.getUsername(),
                 userModel.getEmail(), userModel.getProfilePicture()
+        );
+    }
+
+    public UserModel toEntity(RegisterDTO registerDTO) {
+        //DataBank entry requires the id as a primary key
+        return new UserModel(
+                UUID.randomUUID().toString(),
+                registerDTO.getUsername(),
+                passwordEncoder.encode(registerDTO.getPassword()),
+                registerDTO.getEmail()
         );
     }
 
@@ -54,13 +61,4 @@ public class UserMapper {
         );
     }
 
-    public UserModel toEntity(RegisterDTO registerDTO) {
-        //DataBank entry requires the id as a primary key
-        return new UserModel(
-                    UUID.randomUUID().toString(),
-                    registerDTO.getUsername(),
-                    passwordEncoder.encode(registerDTO.getPassword()),
-                    registerDTO.getEmail()
-        );
-    }
 }

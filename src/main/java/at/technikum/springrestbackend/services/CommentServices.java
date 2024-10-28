@@ -1,17 +1,22 @@
 package at.technikum.springrestbackend.services;
 
+import at.technikum.springrestbackend.dto.CreateCommentDTO;
+import at.technikum.springrestbackend.exception.EntityNotFoundException;
 import at.technikum.springrestbackend.model.CommentModel;
+import at.technikum.springrestbackend.model.EventModel;
+import at.technikum.springrestbackend.model.UserModel;
 import at.technikum.springrestbackend.repository.CommentRepository;
 import at.technikum.springrestbackend.repository.MediaRepository;
 import jakarta.persistence.EntityExistsException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 public class CommentServices {
-    private final CommentRepository postRepository;
+    private final CommentRepository commentRepository;
     @Autowired
     private MediaRepository mediaRepository;
     @Autowired
@@ -22,74 +27,92 @@ public class CommentServices {
     private EventServices eventServices;
 
     public CommentServices(CommentRepository postRepository) {
-        this.postRepository = postRepository;
+        this.commentRepository = postRepository;
     }
 
     public boolean idExists(String id){
       //  String url = fileService.generateSignedURL("test123");
-        return postRepository.existsById(id);
+        return commentRepository.existsById(id);
     }
     public CommentModel find(String id) {
-        return postRepository.findById(id)
+        return commentRepository.findById(id)
                 .orElseThrow(() -> new EntityExistsException("Post not found with id: " + id));
     }
 
     public List<CommentModel> findAll (){
-        return postRepository.findAll();
+        return commentRepository.findAll();
     }
 
     public CommentModel save(CommentModel forumPostModel){
-        return postRepository.save(forumPostModel);
+        return commentRepository.save(forumPostModel);
     }
 
-    public boolean delete(String postID, String username){
-//        CommentModel post = find(postID);
-//        if (!post.getAuthor().getUsername().equals(username) &&
-//                !userServices.findByUsername(username).isAdmin() &&
-//                !post.getEvent().getCreator().getUsername().equals(username)) {
-//            return false;
-//        }
-//
-//        UserModel user = userServices.findByUsername(username);
-//        user.getCreatedComments().remove(post);
-//        userServices.save(user);
-//        EventModel event = eventServices.find(post.getEvent().getEventID());
-//        event.getEventPosts().remove(post);
-//        eventServices.save(event);
-//        mediaRepository.deleteAllByPost(post);
-//        postRepository.delete(post);
-        return true;
+    public CommentModel update(String eventID, String commentID, CreateCommentDTO commentDTO, String userID) {
+
+        if (!idExists(commentID)) {
+            throw new EntityNotFoundException("Comment with provided ID [" + commentID + "] not found.");
+        }
+
+        EventModel event = eventServices.find(eventID);
+        CommentModel updatedComment = find(commentID);
+        UserModel user = userServices.findByID(userID);
+        isAuthorized(updatedComment, userID);
+
+        event.getEventComments().remove(updatedComment);
+
+        updatedComment.setContent(commentDTO.getContent());
+
+        if (updatedComment.getAuthor().getUserID().equals(userID)){
+            user.getCreatedComments().add(updatedComment);
+            userServices.save(user);
+        }
+
+        event.getEventComments().add(updatedComment);
+        eventServices.save(event);
+
+        return updatedComment;
     }
 
-//    public CommentModel update(String id, CreateCommentDTO updatedForumPostDTO, List<MultipartFile> files, String username){
-//        //catching the case when an entity with the id does not exist
-//        if (!idExists(id)){
-//            throw new EntityNotFoundException("Forum Post with provided ID [" + id + "] not found.");
-//        }
-//        //get the existing Post from the DB and THEN set new values
-//        CommentModel updatedPost = find(id);
-//        UserModel user = userServices.findByUsername(username);
-//        EventModel event = eventServices.find(updatedPost.getEvent().getEventID());
-//        if (!userServices.find(updatedForumPostDTO.getAuthorID().getUserID()).getUsername().equals(username) &&
-//                !userServices.findByUsername(username).isAdmin()) {
-//            throw new AccessDeniedException("You do not have permission to update this post.");
-//        }
-//        user.getCreatedComments().remove(updatedPost);
-//        event.getEventPosts().remove(updatedPost);
-//        //update post details
-//        updatedPost.setTitle(updatedForumPostDTO.getTitle());
-//        updatedPost.setContent(updatedForumPostDTO.getContent());
-//        //update post media
-//        List<MediaModel> mediaList = fileService.updatePostMedia(files, updatedPost);
-//        //clear the media list to repopulate with new set of media
-//        updatedPost.getMedia().clear();
-//        updatedPost.getMedia().addAll(mediaList);
-//        event.getEventPosts().add(updatedPost);
-//        eventServices.save(event);
-//        user.getCreatedComments().add(updatedPost);
-//        userServices.save(user);
-//        return postRepository.save(updatedPost);
-//    }
+    public CommentModel delete(String eventID, String commentID, String userID){
+
+        CommentModel comment = find(commentID);
+        EventModel event = eventServices.find(eventID);
+        UserModel user = userServices.findByID(userID);
+
+        if (!event.getEventComments().contains(comment)) {
+            throw new EntityNotFoundException("This Event does not have this Comment.");
+        }
+
+        if (!comment.getAuthor().getUserID().equals(userID) &&
+                !event.getCreator().getUserID().equals(userID) &&
+                !user.isAdmin()) {
+            throw new AccessDeniedException("You do not have permission to perform this action.");
+        }
+
+        user.getCreatedComments().remove(comment);
+        userServices.save(user);
+        mediaRepository.deleteAllByComment(comment);
+
+        event.getEventComments().remove(comment);
+
+        comment.setContent("");
+        comment.setDeleted(true);
+        comment.setTitle("<deleted>");
+        comment.getMedia().clear();
+        save(comment);
+
+        event.getEventComments().add(comment);
+        eventServices.save(event);
+
+        return comment;
+    }
+    public void isAuthorized(CommentModel comment, String userID) {
+        if (!comment.getAuthor().getUserID().equals(userID) &&
+                !userServices.findByID(userID).isAdmin()) {
+            throw new AccessDeniedException("You do not have permission to perform this action.");
+        }
+    }
+
 
 }
 
