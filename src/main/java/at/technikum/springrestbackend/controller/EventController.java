@@ -1,10 +1,13 @@
 package at.technikum.springrestbackend.controller;
 
-import at.technikum.springrestbackend.dto.CreateEventDTO;
+import at.technikum.springrestbackend.dto.*;
+import at.technikum.springrestbackend.mapper.CommentMapper;
 import at.technikum.springrestbackend.mapper.EventMapper;
+import at.technikum.springrestbackend.model.CommentModel;
 import at.technikum.springrestbackend.model.EventModel;
 import at.technikum.springrestbackend.model.UserModel;
 import at.technikum.springrestbackend.security.SecurityUtil;
+import at.technikum.springrestbackend.services.CommentServices;
 import at.technikum.springrestbackend.services.EventServices;
 import at.technikum.springrestbackend.services.FileService;
 import at.technikum.springrestbackend.services.UserServices;
@@ -12,7 +15,6 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -29,6 +31,10 @@ public class EventController {
     private FileService fileService;
     @Autowired
     private UserServices userServices;
+    @Autowired
+    private CommentMapper commentMapper;
+    @Autowired
+    private CommentServices commentServices;
 
     @Autowired
     public EventController(
@@ -39,89 +45,176 @@ public class EventController {
         this.eventServices = eventServices;
     }
 
-    @GetMapping("/{eventId}")
-    @ResponseStatus(HttpStatus.FOUND)
-    public CreateEventDTO read(@PathVariable String eventId) {
-        return eventServices.getEventDetails(eventId);
-    }
-
+    //========================
+    // Event CRUD Operations:
+    //========================
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     @ResponseStatus(HttpStatus.CREATED)
-    public CreateEventDTO create(@RequestPart("eventData") @Valid CreateEventDTO eventDTO,
-                                 @RequestPart("files") List<MultipartFile> files) {
-        UserModel creator = userServices.findByID(eventDTO.getCreatorID());
+    public DisplayEventDTO createEvent (@RequestPart("eventData") @Valid CreateEventDTO eventDTO,
+                                   @RequestPart("file") MultipartFile file) {
+
+        String username = SecurityUtil.getCurrentUserName();
+        UserModel creator = userServices.findByUsername(username);
         EventModel event = eventMapper.toEntity(eventDTO, creator);
-//        String username = SecurityUtil.getCurrentUserName();
-//        List<MediaModel> mediaList = fileService.handleCreateEventUpload(files, event, username);
-//        event.getGalleryPictures().addAll(mediaList);
-        eventServices.save(event);
-        return eventMapper.toSimpleDTO(event);
+        fileService.updateFrontPicture(file, event);
+        userServices.addCreatedEvent(creator, event);
+        return eventMapper.toDisplayDTO(event, creator.getUserID());
     }
 
-    @PutMapping("/{eventId}")
+    @GetMapping("/{eventID}")
     @ResponseStatus(HttpStatus.OK)
-    public CreateEventDTO update(
-            @PathVariable String eventId,
-            @RequestPart("eventData") @Valid CreateEventDTO updatedEventDTO,
-            @RequestPart(value = "files", required = false) List<MultipartFile> files) {
+    public DisplayEventDTO readEvent (@PathVariable String eventID) {
 
         String username = SecurityUtil.getCurrentUserName();
-        return eventMapper.toFullDTO(
-                eventServices.update(eventId, updatedEventDTO, files, username));
+        EventModel event = eventServices.find(eventID);
+        return eventMapper.toDisplayDTO(event, userServices.findByUsername(username).getUserID());
     }
 
-    @DeleteMapping("/{eventId}")
+    @PutMapping("/{eventID}")
     @ResponseStatus(HttpStatus.OK)
-    public CreateEventDTO delete(@PathVariable String eventId){
+    public DisplayEventDTO updateEvent (@PathVariable String eventID,
+                                   @Valid CreateEventDTO updatedEventDTO) {
+
         String username = SecurityUtil.getCurrentUserName();
-        return eventMapper.toFullDTO(eventServices.deleteFinal(eventId, username));
+        UserModel user = userServices.findByUsername(username);
+        EventModel updatedEvent = eventServices.update(eventID, updatedEventDTO, user.getUserID());
+        return eventMapper.toDisplayDTO(updatedEvent, user.getUserID());
     }
 
-    @PutMapping("/{eventId}/addUser/{userID}")
+    @PutMapping("/{eventID}/banner")
     @ResponseStatus(HttpStatus.OK)
-    public CreateEventDTO addUserToEvent(@PathVariable String eventId, @PathVariable String userID) {
-        EventModel updatedEvent = eventServices.joinEvent(eventId, userID);
-        return eventMapper.toFullDTO(updatedEvent);
+    public DisplayEventDTO updateEventBanner (@PathVariable String eventID,
+                                         @RequestPart("file") MultipartFile file) {
+
+        String username = SecurityUtil.getCurrentUserName();
+        EventModel updatedEvent = eventServices.find(eventID);
+        fileService.updateFrontPicture(file, updatedEvent);
+        return eventMapper.toDisplayDTO(updatedEvent, userServices.findByUsername(username).getUserID());
     }
 
-    @PutMapping("/{eventId}/removeUser/{userId}")
+    @DeleteMapping("/{eventID}")
     @ResponseStatus(HttpStatus.OK)
-    public CreateEventDTO removeUserFromEvent(@PathVariable String eventId, @PathVariable String userId) {
+    public DisplayEventDTO deleteEvent (@PathVariable String eventID) {
+
+        String username = SecurityUtil.getCurrentUserName();
+        UserModel user = userServices.findByUsername(username);
+        return eventMapper.toDisplayDTO(eventServices.deleteFinal(eventID, user.getUserID()), user.getUserID());
+    }
+
+    //===========================
+    // Join, Leave Event
+    //===========================
+    @GetMapping("/{eventID}/attendingCount")
+    @ResponseStatus(HttpStatus.OK)
+    public Integer getAttendingCount (@PathVariable String eventID) {
+
+        EventModel event = eventServices.find(eventID);
+        return eventServices.getAttendingCount(event);
+    }
+
+    @GetMapping("/{eventID}/attendees")
+    @ResponseStatus(HttpStatus.OK)
+    public List<UserDTO> getAttendees (@PathVariable String eventID) {
+
+        EventModel event = eventServices.find(eventID);
+        return eventServices.getAttendees(event);
+    }
+
+    @PutMapping("/{eventID}/join")
+    @ResponseStatus(HttpStatus.OK)
+    public DisplayEventDTO joinEvent (@PathVariable String eventID) {
+
+        String username = SecurityUtil.getCurrentUserName();
+        UserModel user = userServices.findByUsername(username);
+        EventModel updatedEvent = eventServices.joinEvent(eventID, user.getUserID());
+        return eventMapper.toDisplayDTO(updatedEvent, user.getUserID());
+    }
+
+    @PutMapping("/{eventID}/leave/")
+    @ResponseStatus(HttpStatus.OK)
+    public DisplayEventDTO leaveEvent (@PathVariable String eventID) {
+
         String userName = SecurityUtil.getCurrentUserName();
-        EventModel updatedEvent = eventServices.removeUserFromEvent(eventId, userId, userName);
-        return eventMapper.toFullDTO(updatedEvent);
+        UserModel user = userServices.findByUsername(userName);
+        EventModel updatedEvent = eventServices.leaveEvent(eventID, user.getUserID());
+        return eventMapper.toDisplayDTO(updatedEvent, user.getUserID());
     }
 
-    @PutMapping("/{eventId}/removeUser/")
+    @PutMapping("/{eventID}/removeUser/{userID}")
     @ResponseStatus(HttpStatus.OK)
-    public CreateEventDTO leaveEvent(@PathVariable String eventId) {
-        String userName = SecurityUtil.getCurrentUserName();
-        EventModel updatedEvent = eventServices.leaveEvent(eventId, userName);
-        return eventMapper.toFullDTO(updatedEvent);
+    public DisplayEventDTO removeUserFromEvent (@PathVariable String eventID, @PathVariable String userID) {
+
+        String username = SecurityUtil.getCurrentUserName();
+        EventModel updatedEvent = eventServices.removeUserFromEvent(eventID, userID);
+        return eventMapper.toDisplayDTO(updatedEvent, userServices.findByUsername(username).getUserID());
     }
 
-    @PutMapping("/{eventId}/upload")
+    //================================
+    // Event Comment CRUD Operations:
+    //================================
+    @PostMapping(path = "/{eventID}/comments", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @ResponseStatus(HttpStatus.CREATED)
+    public DisplayCommentDTO createComment (@PathVariable String eventID,
+                                     @RequestPart("commentData") @Valid CreateCommentDTO commentDTO,
+                                     @RequestPart("files") List<MultipartFile> files) {
+
+        String username = SecurityUtil.getCurrentUserName();
+        EventModel event = eventServices.find(eventID);
+        UserModel author = userServices.findByUsername(username);
+        CommentModel comment = commentMapper.toEntity(commentDTO, event, author);
+        fileService.updateCommentMedia(files, comment, event, author);
+        eventServices.addComment(event, comment);
+        userServices.addCreatedComment(author, comment);
+        return commentMapper.toDisplayDTO(comment);
+    }
+
+    @GetMapping("/{eventID}/comments")
     @ResponseStatus(HttpStatus.OK)
-    public CreateEventDTO uploadGalleryPictures(@PathVariable String eventId,
-                                                @RequestParam("files") List<MultipartFile> files) {
-        EventModel event = eventServices.find(eventId);
-//        String userName = SecurityUtil.getCurrentUserName();
-//        List<MediaModel> mediaList = fileService.uploadMediaToEvent(files, eventId, userName);
-//        event.getGalleryPictures().addAll(mediaList);
-        eventServices.save(event);
-        return eventMapper.toFullDTO(event);
+    public List<DisplayCommentDTO> readAllComments (@PathVariable String eventID) {
+
+        EventModel event = eventServices.find(eventID);
+        return eventServices.getCommentsFromEvent(event);
     }
 
-    @DeleteMapping("/{eventId}/gallery/{mediaId}")
+    @GetMapping("/{eventID}/commentCount")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<String> deletePictureFromGallery(@PathVariable String eventId,
-                                                           @PathVariable String mediaId) {
-//        String currentUserName = SecurityUtil.getCurrentUserName();
-//        boolean isDeleted = eventServices.deletePictureFromGallery(eventId, mediaId, currentUserName);
-        boolean isDeleted = true;
-        return isDeleted
-                ? ResponseEntity.ok("Picture deleted successfully.")
-                : ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authorized to delete this picture.");
+    public Integer getCommentCount (@PathVariable String eventID) {
+
+        EventModel event = eventServices.find(eventID);
+        return eventServices.getCommentCount(event);
     }
 
+    @PutMapping("/{eventID}/comments/{commentID}")
+    @ResponseStatus(HttpStatus.OK)
+    public DisplayCommentDTO updateComment (@PathVariable String eventID,
+                                            @PathVariable String commentID,
+                                            @Valid CreateCommentDTO commentDTO) {
+
+        String username = SecurityUtil.getCurrentUserName();
+        UserModel user = userServices.findByUsername(username);
+        CommentModel comment = commentServices.update(eventID, commentID, commentDTO, user.getUserID());
+        return commentMapper.toDisplayDTO(comment);
+    }
+
+    @DeleteMapping("/{eventID}/comments/{commentID}")
+    @ResponseStatus(HttpStatus.OK)
+    public DisplayCommentDTO deleteComment (@PathVariable String eventID,
+                                          @PathVariable String commentID) {
+
+        String username = SecurityUtil.getCurrentUserName();
+        UserModel user = userServices.findByUsername(username);
+        return commentMapper.toDisplayDTO(commentServices.delete(eventID, commentID, user.getUserID()));
+    }
+
+    //=========================
+    // Event Media Operations:
+    //=========================
+
+    @GetMapping("/{eventID}/media")
+    @ResponseStatus(HttpStatus.OK)
+    public List<MediaDTO> readAllFiles (@PathVariable String eventID) {
+
+        EventModel event = eventServices.find(eventID);
+        return eventServices.getMediaFromEvent(event);
+    }
 }

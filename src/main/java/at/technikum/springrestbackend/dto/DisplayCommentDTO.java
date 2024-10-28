@@ -3,8 +3,8 @@ package at.technikum.springrestbackend.dto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DisplayCommentDTO {
     private String commentID;
@@ -17,13 +17,13 @@ public class DisplayCommentDTO {
     private UserDTO author;
     private String content;
     private String replyToCommentID;
-    private Set<String> mediaURLs = new HashSet<>();
+    private List<String> mediaURLs = new ArrayList<>();
 
     public DisplayCommentDTO() {
     }
 
     public DisplayCommentDTO(String commentID, String eventID, String title, UserDTO author,
-                             String content, String replyToCommentID, Set<String> mediaURLs) {
+                             String content, String replyToCommentID, List<String> mediaURLs) {
         this.commentID = commentID;
         this.eventID = eventID;
         this.title = title;
@@ -81,11 +81,11 @@ public class DisplayCommentDTO {
         this.replyToCommentID = replyToCommentID;
     }
 
-    public Set<String> getMediaURLs() {
+    public List<String> getMediaURLs() {
         return mediaURLs;
     }
 
-    public void setMediaURLs(Set<String> mediaURLs) {
+    public void setMediaURLs(List<String> mediaURLs) {
         this.mediaURLs = mediaURLs;
     }
 }

@@ -15,6 +15,7 @@ public class MediaMapper {
     public MediaDTO toDTO(MediaModel media){
         return new MediaDTO(
                 media.getMediaID(), media.getFileURL(),
+                media.getEvent().getEventID(),
                 userMapper.toSimpleDTO(media.getUploader()),
                 media.getComment().getCommentID()
         );

@@ -35,6 +35,15 @@ public class MediaServices {
         return mediaRepository.findAll();
     }
 
+    public MediaModel findByEventAndMedia(String mediaID, String eventID) {
+
+        EventModel event = eventRepository.findById(eventID)
+                .orElseThrow(() -> new EntityNotFoundException("No User found."));
+
+        return mediaRepository.findByMediaIDAndEvent(mediaID, event)
+                .orElseThrow(() -> new EntityExistsException("Event not found with id: " + eventID));
+    }
+
     public List<MediaDTO> getMediaFromUser (UserModel userModel){
 
         List<MediaDTO> mediaList = new ArrayList<>();
@@ -46,13 +55,14 @@ public class MediaServices {
         return mediaList;
     }
 
-    public MediaModel findByEventAndMedia(String mediaID, String eventID) {
+    public List<String> getMediaFromComment(CommentModel comment) {
+        List<String> imageURLs = new ArrayList<>();
 
-        EventModel event = eventRepository.findById(eventID)
-                .orElseThrow(() -> new EntityNotFoundException("No User found."));
+        for (MediaModel image : comment.getMedia()) {
+            imageURLs.add(image.getFileURL());
+        }
 
-        return mediaRepository.findByMediaIDAndEvent(mediaID, event)
-                .orElseThrow(() -> new EntityExistsException("Event not found with id: " + eventID));
+        return imageURLs;
     }
 
     public MediaModel save(MediaModel mediaModel){

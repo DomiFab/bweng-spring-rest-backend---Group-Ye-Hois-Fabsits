@@ -3,8 +3,6 @@ package at.technikum.springrestbackend.dto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 
-import java.time.LocalDateTime;
-
 public class DisplayEventDTO {
     private String eventID;
     private String eventName;
@@ -14,8 +12,6 @@ public class DisplayEventDTO {
     private boolean isCreator;
     @NotBlank
     private String eventLocation;
-    @NotBlank
-    private LocalDateTime eventDate;
     @NotBlank
     private String eventStatus;
     private String eventPicture;
@@ -28,13 +24,12 @@ public class DisplayEventDTO {
     }
 
     //ABGESPECKT, weil Media, Comment (Attendees) separat geladen werden!
-    public DisplayEventDTO(String eventID, String eventName, String eventLocation, LocalDateTime eventDate,
-                    String eventStatus, String eventDescription, String eventPicture,
+    public DisplayEventDTO(String eventID, String eventName, String eventLocation,
+                           String eventStatus, String eventDescription, String eventPicture,
                     boolean isDeleted, UserDTO creator, boolean isCreator, Long attendeeCount) {
         this.eventID = eventID;
         this.eventName = eventName;
         this.eventLocation = eventLocation;
-        this.eventDate = eventDate;
         this.eventStatus = eventStatus;
         this.eventDescription = eventDescription;
         this.eventPicture = eventPicture;
@@ -74,14 +69,6 @@ public class DisplayEventDTO {
 
     public void setEventLocation(String eventLocation) {
         this.eventLocation = eventLocation;
-    }
-
-    public LocalDateTime getEventDate() {
-        return eventDate;
-    }
-
-    public void setEventDate(LocalDateTime eventDate) {
-        this.eventDate = eventDate;
     }
 
     public String getEventStatus() {

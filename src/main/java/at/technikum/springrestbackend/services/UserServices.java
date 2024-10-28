@@ -5,8 +5,11 @@ import at.technikum.springrestbackend.dto.UserDTO;
 import at.technikum.springrestbackend.exception.EntityNotFoundException;
 import at.technikum.springrestbackend.mapper.UserMapper;
 import at.technikum.springrestbackend.model.CommentModel;
-import at.technikum.springrestbackend.model.MediaModel;
+import at.technikum.springrestbackend.model.EventModel;
 import at.technikum.springrestbackend.model.UserModel;
+import at.technikum.springrestbackend.repository.CommentRepository;
+import at.technikum.springrestbackend.repository.EventRepository;
+import at.technikum.springrestbackend.repository.MediaRepository;
 import at.technikum.springrestbackend.repository.UserRepository;
 import jakarta.persistence.EntityExistsException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,11 +30,18 @@ public class UserServices {
     private final UserMapper userMapper;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private CommentRepository commentRepository;
+    @Autowired
+    private EventRepository eventRepository;
+    private final MediaRepository mediaRepository;
 
     @Autowired
-    public UserServices(UserRepository userRepository, UserMapper userMapper) {
+    public UserServices(UserRepository userRepository, UserMapper userMapper,
+                        MediaRepository mediaRepository) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
+        this.mediaRepository = mediaRepository;
     }
 
     public boolean idExists(String id){
@@ -64,26 +74,66 @@ public class UserServices {
         return userRepository.save(userModel);
     }
 
-    public UserModel saveComment(UserModel user, List<MediaModel> mediaList, CommentModel comment){
-        user.getCreatedComments().add(comment);
-        user.getUploadedMedia().addAll(mediaList);
-        return save(user);
-    }
+//    public UserModel saveComment(UserModel user, List<MediaModel> mediaList, CommentModel comment){
+//        user.getCreatedComments().add(comment);
+//        user.getUploadedMedia().addAll(mediaList);
+//        return save(user);
+//    }
 
     public UserModel update(UserDTO updatedUserDTO, String username){
 
         UserModel user = findByUsername(username);
 
-        if (usernameExists(updatedUserDTO.getUsername())) {
-            throw new EntityExistsException("Username already exists: " + updatedUserDTO.getUsername());
-        }
+//        if (usernameExists(updatedUserDTO.getUsername())) {
+//            throw new EntityExistsException("Username already exists: " + updatedUserDTO.getUsername());
+//        }
         if (emailExists(updatedUserDTO.getEmail())) {
             throw new EntityExistsException("Email already exists: " + updatedUserDTO.getEmail());
         }
-        user.setUsername(updatedUserDTO.getUsername());
+
+//        for (EventModel attending : user.getAttendingEvents()) {
+//            attending.getAttendingUsers().remove(user);
+//            eventRepository.save(attending);
+//        }
+
+//        user.setUsername(updatedUserDTO.getUsername());
         user.setEmail(updatedUserDTO.getEmail());
 
+//        updateUserRelated(user);
+
         return userRepository.save(user);
+    }
+
+    private void updateUserRelated(UserModel user) {
+//        for (CommentModel comment : user.getCreatedComments()) {
+//            comment.setAuthor(user);
+//            commentRepository.save(comment);
+//        }
+//
+//        for (EventModel created : user.getCreatedEvents()) {
+//            created.setCreator(user);
+//            eventRepository.save(created);
+//        }
+//
+//        for (MediaModel media : user.getUploadedMedia()) {
+//            media.setUploader(user);
+//            mediaRepository.save(media);
+//        }
+
+//        for (EventModel attending : user.getAttendingEvents()) {
+//            attending.getAttendingUsers().add(user);
+//            eventRepository.save(attending);
+//        }
+    }
+
+    public void addCreatedEvent(UserModel user, EventModel event) {
+        user.getCreatedEvents().add(event);
+        save(user);
+    }
+
+    public void addCreatedComment(UserModel user, CommentModel comment) {
+        user.getCreatedComments().add(comment);
+        save(user);
     }
 
     public ResponseEntity<?> changePassword (ResetPasswordDTO resetPasswordDTO){
@@ -110,7 +160,7 @@ public class UserServices {
         UserModel user = findByID(userID);
         if (!user.getUsername().equals(username) &&
                 !findByUsername(username).isAdmin()) {
-            throw new AccessDeniedException("You do not have permission to update this user.");
+            throw new AccessDeniedException("You do not have permission to delete this user.");
         }
         userRepository.delete(user);
         return ResponseEntity.ok("User was successfully deleted.");
