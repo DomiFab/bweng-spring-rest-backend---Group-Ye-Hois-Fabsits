@@ -44,7 +44,7 @@ public class UserController {
 
     //get UserDashboardDTO, without userID because username in jwt - on first Login
     @GetMapping()
-    @ResponseStatus(HttpStatus.FOUND)
+    @ResponseStatus(HttpStatus.OK)
     public UserDTO read() {
         String username = SecurityUtil.getCurrentUserName();
         UserModel user = userServices.findByUsername(username);
@@ -53,7 +53,7 @@ public class UserController {
 
     //get specific UserDashboardDTO with username if needed
     @GetMapping("/{username}")
-    @ResponseStatus(HttpStatus.FOUND)
+    @ResponseStatus(HttpStatus.OK)
     public UserDTO readByID(@PathVariable String username) {
         UserModel user = userServices.findByUsername(username);
         return userMapper.toSimpleDTO(user);
@@ -61,7 +61,7 @@ public class UserController {
 
     //get attending and created events
     @GetMapping("/events")
-    @ResponseStatus(HttpStatus.FOUND)
+    @ResponseStatus(HttpStatus.OK)
     public List<DisplayEventDTO> readEvents() {
 
         String username = SecurityUtil.getCurrentUserName();
@@ -71,7 +71,7 @@ public class UserController {
 
     //get list of uploaded media by user
     @GetMapping("/media")
-    @ResponseStatus(HttpStatus.FOUND)
+    @ResponseStatus(HttpStatus.OK)
     public List<MediaDTO> readMedia() {
 
         String username = SecurityUtil.getCurrentUserName();
@@ -83,7 +83,7 @@ public class UserController {
     //update own user profile (username, email)
     @PutMapping()
     @ResponseStatus(HttpStatus.OK)
-    public UserDTO update(@RequestBody UserDTO updatedUserDTO){
+    public UserDTO update(@RequestBody UserDTO updatedUserDTO) {
 
         String jwtUsername = SecurityUtil.getCurrentUserName();
         return userMapper.toSimpleDTO(userServices.update(updatedUserDTO, jwtUsername));
@@ -91,14 +91,14 @@ public class UserController {
 
     @PutMapping("/password")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<?> updatePassword(@RequestBody ResetPasswordDTO resetPasswordDTO){
+    public ResponseEntity<?> updatePassword(@RequestBody ResetPasswordDTO resetPasswordDTO) {
 
         return userServices.changePassword(resetPasswordDTO);
     }
 
     @PutMapping(value = "/avatar", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     @ResponseStatus(HttpStatus.OK)
-    public UserDTO uploadProfilePicture(@RequestPart("file")MultipartFile file){
+    public UserDTO uploadProfilePicture(@RequestPart("file") MultipartFile file) {
 
         String authUser = SecurityUtil.getCurrentUserName();
         fileService.uploadProfilePicture(file, userServices.findByUsername(authUser));
@@ -107,7 +107,7 @@ public class UserController {
 
     @DeleteMapping("/{userID}")
     @ResponseStatus(HttpStatus.FOUND)
-    public ResponseEntity<?> delete(@PathVariable String userID){
+    public ResponseEntity<?> delete(@PathVariable String userID) {
 
         String username = SecurityUtil.getCurrentUserName();
         return userServices.delete(userID, username);
