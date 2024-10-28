@@ -48,17 +48,14 @@ public class EventModel {
 
     //Event Creation
     public EventModel(String eventID, String eventName, String eventLocation, LocalDateTime eventDate,
-                      String eventDescription, boolean isDeleted, UserModel creator, String eventStatus,
-                      String eventPicture) {
+                      String eventDescription, UserModel creator, String eventStatus) {
         this.eventID = eventID;
         this.eventName = eventName;
         this.eventLocation = eventLocation;
         this.eventDate = eventDate;
         this.eventDescription = eventDescription;
-        this.isDeleted = isDeleted;
         this.creator = creator;
         this.eventStatus = eventStatus;
-        this.eventPicture = eventPicture;
     }
 
     public EventModel(String eventID, String eventName, String eventLocation, LocalDateTime eventDate,

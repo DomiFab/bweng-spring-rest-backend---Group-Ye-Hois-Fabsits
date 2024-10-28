@@ -27,7 +27,7 @@ public class FileService {
     @Autowired
     private EventRepository eventRepository;
     @Autowired
-    private CommentRepository postRepository;
+    private CommentRepository commentRepository;
     @Autowired
     private UserRepository userRepository;
 
@@ -107,7 +107,6 @@ public class FileService {
         }
     }
 
-
     public void uploadProfilePicture(MultipartFile file, UserModel userModel) {
         // Validate the input file
         if (file.isEmpty()) {
@@ -146,6 +145,48 @@ public class FileService {
         }
     }
 
+    public void updateFrontPicture(MultipartFile file, EventModel event) {
+        try {
+            if (file.isEmpty()) {
+                removeOldMediaData(event);
+                return;
+            }
+            // Delete old Front Picture
+            removeOldMediaData(event);
+
+            String fileName = UUID.randomUUID().toString(); // Generate unique file name
+            String filePath = "/event/uploads/" + fileName;
+            String fileURL = "http://localhost:9000/files" + filePath;
+            this.uploadFile(filePath, file.getInputStream(), file.getContentType());
+
+            MediaModel media = new MediaModel(fileName, fileURL, event, event.getCreator(), new CommentModel());
+            mediaRepository.save(media);
+            event.setEventPicture(fileURL);
+            eventRepository.save(event);
+            event.getCreator().getUploadedMedia().add(media);
+            userRepository.save(event.getCreator());
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error uploading file: " + file.getOriginalFilename(), e);
+        }
+    }
+
+    private void removeOldMediaData(EventModel event) {
+
+        mediaRepository.deleteByFileURL(event.getEventPicture());
+
+        event.getCreator()
+                .getUploadedMedia()
+                .remove(
+                        mediaRepository.findByFileURL(event.getEventPicture())
+                );
+        event.setEventPicture("");
+
+        eventRepository.save(event);
+        userRepository.save(event.getCreator());
+
+        deleteFile(event.getEventPicture().replace("http://localhost:9000/files", ""));
+    }
 //    public List<MediaModel> uploadMediaToComment(List<MultipartFile> files, ForumThreadModel comment, String username){
 //        if (username == null || username.isEmpty()) {
 //            throw new AccessDeniedException("You need to be logged in to comment.");
@@ -236,13 +277,6 @@ public class FileService {
 //        return mediaModelList;
 //    }
 //
-//    public List<MediaModel> handleCreateEventUpload(List<MultipartFile> files, EventModel event, String username) {
-//        if (!event.getCreator().getUsername().equals(username) &&
-//                !userServices.findByUsername(username).isAdmin()) {
-//            throw new AccessDeniedException("You do not have permission to update this event.");
-//        }
-//        return uploadFiles(files, event, event.getCreator(), true);
-//    }
 //
 //    public List<MediaModel> uploadMediaToEvent(List<MultipartFile> files, String eventID, String userName) {
 //        EventModel event = eventRepository.findById(eventID)
@@ -273,25 +307,5 @@ public class FileService {
 //        return mediaModelList;
 //    }
 //
-//    private List<MediaModel> uploadFiles(List<MultipartFile> files, EventModel event, UserModel user, boolean isFrontPic) {
-//        List<MediaModel> mediaList = new ArrayList<>();
-//
-//        for (MultipartFile file : files) {
-//            try {
-//                String fileName = UUID.randomUUID().toString(); // Generate unique file name
-//                String filePath = "/event/uploads/" + fileName;
-//                this.uploadFile(filePath, file.getInputStream(), file.getContentType());
-//
-//                MediaModel media = new MediaModel(fileName, filePath, event, user, isFrontPic);
-//                mediaRepository.save(media);
-//                mediaList.add(media);
-//            } catch (Exception e) {
-//                throw new RuntimeException("Error uploading file: " + file.getOriginalFilename(), e);
-//            }
-//        }
-//
-//        user.getUploadedMedia().addAll(mediaList);
-//        userServices.save(user);
-//        return mediaList;
-//    }
+
 }

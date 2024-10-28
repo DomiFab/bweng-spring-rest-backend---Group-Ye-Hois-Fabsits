@@ -8,6 +8,8 @@ import at.technikum.springrestbackend.services.MediaServices;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 public class EventMapper {
 
@@ -25,9 +27,9 @@ public class EventMapper {
         this.mediaMapper = mediaMapper;
     }
 
-    public DisplayEventDTO toDisplayDTO (EventModel eventModel, String userID) {
+    public DisplayEventDTO toDisplayDTO (EventModel eventModel, String username) {
 
-        boolean isCreator = eventModel.getCreator().getUserID().equals(userID);
+        boolean isCreator = eventModel.getCreator().getUsername().equals(username);
 
         return new DisplayEventDTO(
                 eventModel.getEventID(), eventModel.getEventName(),
@@ -43,13 +45,10 @@ public class EventMapper {
     public EventModel toEntity(CreateEventDTO eventDTO, UserModel creator) {
         //DataBank entry requires the id as a primary key
         return new EventModel(
-//                UUID.randomUUID().toString(),
-//                creator,
-//                eventDTO.getEventName(),
-//                eventDTO.getEventLocation(), eventDTO.getEventDate(),
-//                eventDTO.getEventShortDescription(),
-//                eventDTO.getEventLongDescription(),
-//                new HashSet<>()
+                UUID.randomUUID().toString(),
+                eventDTO.getEventName(), eventDTO.getEventLocation(),
+                eventDTO.getEventDate(), eventDTO.getEventDescription(),
+                creator, eventDTO.getEventStatus()
         );
     }
 
@@ -64,7 +63,7 @@ public class EventMapper {
 //                eventModel.isDeleted(),
 //                userMapper.toSimpleDTO(eventModel.getCreator()),
 //                mediaServices.getFrontPicture(eventModel.getGalleryPictures())
-                );
+        );
     }
 
     //for full event page

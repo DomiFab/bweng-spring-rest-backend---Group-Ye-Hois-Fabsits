@@ -1,18 +1,20 @@
 package at.technikum.springrestbackend.services;
 
-
 import at.technikum.springrestbackend.dto.CreateEventDTO;
 import at.technikum.springrestbackend.dto.DisplayEventDTO;
 import at.technikum.springrestbackend.exception.EntityNotFoundException;
 import at.technikum.springrestbackend.mapper.EventMapper;
+import at.technikum.springrestbackend.model.CommentModel;
 import at.technikum.springrestbackend.model.EventModel;
 import at.technikum.springrestbackend.model.UserModel;
 import at.technikum.springrestbackend.repository.*;
+import at.technikum.springrestbackend.security.SecurityUtil;
 import jakarta.persistence.EntityExistsException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,18 +30,21 @@ public class EventServices {
     private final UserServices userServices;
     private final MediaServices mediaServices;
     private final EventMapper eventMapper;
+    private final UserRepository userRepository;
 
     @Autowired
     public EventServices(EventRepository eventRepository,
                          MediaRepository mediaRepository,
                          FileService fileService, UserServices userServices,
-                         MediaServices mediaServices, EventMapper eventMapper) {
+                         MediaServices mediaServices, EventMapper eventMapper,
+                         UserRepository userRepository) {
         this.eventRepository = eventRepository;
         this.mediaRepository = mediaRepository;
         this.fileService = fileService;
         this.userServices = userServices;
         this.mediaServices = mediaServices;
         this.eventMapper = eventMapper;
+        this.userRepository = userRepository;
     }
 
 
@@ -61,10 +66,10 @@ public class EventServices {
         List<DisplayEventDTO> events = new ArrayList<>();
         //attending events
         for (EventModel event : userModel.getAttendingEvents()){
-            events.add(eventMapper.toDisplayDTO(event, userModel.getUserID()));
+            events.add(eventMapper.toDisplayDTO(event, userModel.getUsername()));
         }
         for (EventModel event : userModel.getCreatedEvents()){
-            events.add(eventMapper.toDisplayDTO(event, userModel.getUserID()));
+            events.add(eventMapper.toDisplayDTO(event, userModel.getUsername()));
         }
 
         return events;
@@ -74,26 +79,21 @@ public class EventServices {
         return eventRepository.save(eventModel);
     }
 
-    public EventModel update(String id, CreateEventDTO updatedEventDTO, List<MultipartFile> files, String userName) {
+    public EventModel update(String eventID, CreateEventDTO updatedEventDTO, String username) {
 
         //catching the case when an entity with the id does not exist
-        if (!idExists(id)) {
-            throw new EntityNotFoundException("Event with provided ID [" + id + "] not found.");
+        if (!idExists(eventID)) {
+            throw new EntityNotFoundException("Event with provided ID [" + eventID + "] not found.");
         }
         //get the existing Event from the DB and THEN set new values
-        EventModel updatedEvent = find(id);
-
-        if (!updatedEvent.getCreator().getUsername().equals(userName) &&
-                !userServices.findByUsername(userName).isAdmin()) {
-            throw new AccessDeniedException("You do not have permission to update this event.");
-        }
+        EventModel updatedEvent = find(eventID);
+        isAuthorized(updatedEvent, username);
 
         updatedEvent.setEventName(updatedEventDTO.getEventName());
         updatedEvent.setEventLocation(updatedEventDTO.getEventLocation());
         updatedEvent.setEventDate(updatedEventDTO.getEventDate());
-
-//        List<MediaModel> mediaList = fileService.updateFrontPicture(files, updatedEvent);
-//        updatedEvent.getGalleryPictures().addAll(mediaList);
+        updatedEvent.setEventDescription(updatedEventDTO.getEventDescription());
+        updatedEvent.setEventStatus(updatedEventDTO.getEventStatus());
 
         return eventRepository.save(updatedEvent);
     }
@@ -114,12 +114,25 @@ public class EventServices {
     public EventModel deleteFinal(String eventID, String username) {
         //find event by ID
         EventModel event = find(eventID);
-        if (!event.getCreator().getUsername().equals(username) &&
-                !userServices.findByUsername(username).isAdmin()) {
-            throw new AccessDeniedException("You do not have permission to update this event.");
+        isAuthorized(event, username);
+
+        for (UserModel user : event.getAttendingUsers()){
+            user.getAttendingEvents().remove(event);
+            userRepository.save(user);
         }
+
+        event.getCreator().getCreatedEvents().remove(event);
+        userRepository.save(event.getCreator());
+
         eventRepository.delete(event);
         return event;
+    }
+
+    public void isAuthorized(EventModel event, String username) {
+        if (!event.getCreator().getUsername().equals(username) &&
+                !userServices.findByUsername(username).isAdmin()) {
+            throw new AccessDeniedException("You do not have permission to perform this action.");
+        }
     }
 
     public EventModel joinEvent(String eventId, String userID) {
@@ -138,18 +151,14 @@ public class EventServices {
         return save(event);
     }
 
-    //for event owners and admins to block users from event
+    //for event owners and admins to remove users from event
     public EventModel removeUserFromEvent(String eventID, String userID, String username){
-
         // Find the event by ID
         EventModel event = find(eventID);
         // Find the user by ID
         UserModel user = userServices.findByID(userID);
 
-        if (!event.getCreator().getUsername().equals(username) &&
-                !userServices.findByUsername(username).isAdmin()) {
-            throw new AccessDeniedException("You do not have permission to update this event.");
-        }
+        isAuthorized(event, username);
 
         // Add user to event's attending users
         event.getAttendingUsers().remove(user);
@@ -177,19 +186,5 @@ public class EventServices {
         userServices.save(user);
         return save(event);
     }
-
-    public CreateEventDTO getEventDetails(String eventID){
-        EventModel event = find(eventID);
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated()) {
-            // Return full DTO if authenticated
-            return eventMapper.toFullDTO(event);
-        } else {
-            // Return simple DTO if not authenticated
-            return eventMapper.toSimpleDTO(event);
-        }
-    }
-
-
 }
 

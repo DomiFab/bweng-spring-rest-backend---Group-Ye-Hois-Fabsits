@@ -11,6 +11,8 @@ import java.util.Optional;
 public interface MediaRepository extends ListCrudRepository<MediaModel, String> {
 
     Optional<MediaModel> deleteAllByEvent(EventModel event);
+    void deleteByFileURL(String fileURL);
+    MediaModel findByFileURL(String fileURL);
     Optional<MediaModel> findByMediaIDAndEvent(String mediaId, EventModel eventId);
 
 }
