@@ -129,6 +129,7 @@ public class AuthenticationServices {
                 .httpOnly(true)
                 .path("/")
                 .maxAge(24 * 60 * 60)
+                .sameSite("None")
                 .build();
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.SET_COOKIE, jwtCookie.toString());
@@ -156,7 +157,7 @@ public class AuthenticationServices {
         }
     }
 
-    public void isEventCreator(){
+    public void isEventCreator() {
 
     }
 
