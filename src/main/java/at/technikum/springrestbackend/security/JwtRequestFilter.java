@@ -34,7 +34,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         // ignore filtering for swagger
         String requestPath = request.getServletPath();
         if (requestPath.startsWith("/swagger-ui") || requestPath.startsWith("/v3/api-docs")
-            || requestPath.startsWith("/api") /*|| requestPath.startsWith("/auth")*/ ) {
+            || requestPath.startsWith("/api") || requestPath.startsWith("/auth") ) {
             chain.doFilter(request, response);
             return;
         }

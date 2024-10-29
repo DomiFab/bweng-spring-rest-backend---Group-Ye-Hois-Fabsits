@@ -25,7 +25,8 @@ public class EventMapper {
                 eventModel.getEventStatus(), eventModel.getEventDescription(),
                 eventModel.getEventPicture(), eventModel.isDeleted(),
                 userMapper.toSimpleDTO(eventModel.getCreator()),
-                isCreator, (long) eventModel.getAttendingUsers().size()
+                isCreator, (long) eventModel.getAttendingUsers().size(),
+                eventModel.getEventDate()
         );
     }
 
@@ -38,7 +39,8 @@ public class EventMapper {
                 eventDTO.getEventLocation(),
                 eventDTO.getEventDescription(),
                 creator,
-                eventDTO.getEventStatus()
+                eventDTO.getEventStatus(),
+                eventDTO.getEventDate()
         );
     }
 

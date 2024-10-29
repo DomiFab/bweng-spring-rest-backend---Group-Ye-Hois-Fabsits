@@ -107,13 +107,15 @@ public class FileService {
         }
     }
 
-    public void uploadProfilePicture(MultipartFile file, UserModel userModel) {
+    public void updateProfilePicture(MultipartFile file, UserModel userModel) {
         // Validate the input file
         if (file.isEmpty()) {
             throw new IllegalArgumentException("File must not be empty.");
         }
         // Delete old file
-        deleteFile(userModel.getProfilePicture().replace("http://localhost:9000/files", ""));
+        if (userModel.getProfilePicture() != null) {
+            deleteFile(userModel.getProfilePicture().replace("http://localhost:9000/files", ""));
+        }
         // Upload the new file
         String fileName = UUID.randomUUID().toString(); // Generate a unique file name
         String filePath = "/profile/" + fileName; // Define the path for the profile picture
@@ -205,32 +207,36 @@ public class FileService {
 
     private void removeOldFrontPictureData(EventModel event) {
 
-        MediaModel media = mediaRepository.findByFileURL(event.getEventPicture());
+        if (event.getEventPicture() != null) {
+            MediaModel media = mediaRepository.findByFileURL(event.getEventPicture());
 
-        mediaRepository.deleteByFileURL(event.getEventPicture());
-        event.getCreator().getUploadedMedia().remove(media);
-        event.setEventPicture("");
+            mediaRepository.deleteByFileURL(event.getEventPicture());
+            event.getCreator().getUploadedMedia().remove(media);
+            deleteFile(event.getEventPicture().replace("http://localhost:9000/files", ""));
 
-        eventRepository.save(event);
-        userRepository.save(event.getCreator());
+            event.setEventPicture("");
 
-        deleteFile(event.getEventPicture().replace("http://localhost:9000/files", ""));
+            eventRepository.save(event);
+            userRepository.save(event.getCreator());
+        }
     }
 
     private void removeOldCommentPictures(EventModel event, CommentModel comment, UserModel author) {
 
-        for (MediaModel media : comment.getMedia()) {
+        if (!comment.getMedia().isEmpty()) {
+            for (MediaModel media : comment.getMedia()) {
 
-            event.getGalleryPictures().remove(media);
-            comment.getMedia().remove(media);
-            author.getUploadedMedia().remove(media);
+                event.getGalleryPictures().remove(media);
+                comment.getMedia().remove(media);
+                author.getUploadedMedia().remove(media);
 
-            deleteFile(media.getFileURL().replace("http://localhost:9000/files", ""));
+                deleteFile(media.getFileURL().replace("http://localhost:9000/files", ""));
+            }
+
+            mediaRepository.deleteAllByComment(comment);
+            eventRepository.save(event);
+            commentRepository.save(comment);
+            userRepository.save(author);
         }
-
-        mediaRepository.deleteAllByComment(comment);
-        eventRepository.save(event);
-        commentRepository.save(comment);
-        userRepository.save(author);
     }
 }

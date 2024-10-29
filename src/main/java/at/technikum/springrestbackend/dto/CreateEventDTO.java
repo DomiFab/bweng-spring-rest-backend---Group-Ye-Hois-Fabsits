@@ -10,7 +10,6 @@ public class CreateEventDTO {
     private String eventName;
     @NotBlank
     private String eventLocation;
-    @NotBlank
     private LocalDateTime eventDate;
     @NotBlank
     private String eventStatus;

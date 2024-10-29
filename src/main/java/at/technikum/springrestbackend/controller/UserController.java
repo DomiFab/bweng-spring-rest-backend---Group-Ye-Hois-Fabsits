@@ -77,7 +77,7 @@ public class UserController {
     public UserDTO uploadProfilePicture(@RequestPart("file")MultipartFile file) {
 
         String authUser = SecurityUtil.getCurrentUserName();
-        fileService.uploadProfilePicture(file, userServices.findByUsername(authUser));
+        fileService.updateProfilePicture(file, userServices.findByUsername(authUser));
         return userMapper.toSimpleDTO(userServices.findByUsername(authUser));
     }
 
