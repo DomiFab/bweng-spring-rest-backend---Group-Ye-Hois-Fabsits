@@ -10,7 +10,6 @@ import jakarta.persistence.EntityExistsException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -125,14 +124,8 @@ public class AuthenticationServices {
     }
 
     private HttpHeaders getSuccessfulLoginHeaderResponse(String jwt) {
-        ResponseCookie jwtCookie = ResponseCookie.from("jwt", jwt)
-                .httpOnly(true)
-                .path("/")
-                .maxAge(24 * 60 * 60)
-                .sameSite("None")
-                .build();
         HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.SET_COOKIE, jwtCookie.toString());
+        headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + jwt);
         return headers;
     }
 
