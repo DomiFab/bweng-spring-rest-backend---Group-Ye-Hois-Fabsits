@@ -20,13 +20,16 @@ public class EventMapper {
         boolean isCreator = eventModel.getCreator().getUserID().equals(userID);
 
         return new DisplayEventDTO(
-                eventModel.getEventID(), eventModel.getEventName(),
+                eventModel.getEventID(),
+                eventModel.getEventName(),
                 eventModel.getEventLocation(),
-                eventModel.getEventStatus(), eventModel.getEventDescription(),
-                eventModel.getEventPicture(), eventModel.isDeleted(),
+                eventModel.getEventStatus(),
+                eventModel.getEventDescription(),
+                eventModel.getEventPicture(),
+                eventModel.isDeleted(),
                 userMapper.toSimpleDTO(eventModel.getCreator()),
-                isCreator, (long) eventModel.getAttendingUsers().size(),
-                eventModel.getEventDate()
+                isCreator,
+                (long) eventModel.getAttendingUsers().size()
         );
     }
 
@@ -39,8 +42,7 @@ public class EventMapper {
                 eventDTO.getEventLocation(),
                 eventDTO.getEventDescription(),
                 creator,
-                eventDTO.getEventStatus(),
-                eventDTO.getEventDate()
+                eventDTO.getEventStatus()
         );
     }
 

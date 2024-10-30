@@ -1,17 +1,10 @@
 package at.technikum.springrestbackend.dto;
 
-import jakarta.validation.constraints.NotBlank;
-
-import java.time.LocalDateTime;
-
 
 public class CreateEventDTO {
 
     private String eventName;
-    @NotBlank
     private String eventLocation;
-    private LocalDateTime eventDate;
-    @NotBlank
     private String eventStatus;
     private String eventDescription;
 
@@ -20,11 +13,9 @@ public class CreateEventDTO {
     }
 
     //Create/UpdateEventDTO
-    public CreateEventDTO(String eventName, String eventLocation,
-                          LocalDateTime eventDate, String eventStatus, String eventDescription) {
+    public CreateEventDTO(String eventName, String eventLocation, String eventStatus, String eventDescription) {
         this.eventName = eventName;
         this.eventLocation = eventLocation;
-        this.eventDate = eventDate;
         this.eventStatus = eventStatus;
         this.eventDescription = eventDescription;
     }
@@ -43,14 +34,6 @@ public class CreateEventDTO {
 
     public void setEventLocation(String eventLocation) {
         this.eventLocation = eventLocation;
-    }
-
-    public LocalDateTime getEventDate() {
-        return eventDate;
-    }
-
-    public void setEventDate(LocalDateTime eventDate) {
-        this.eventDate = eventDate;
     }
 
     public String getEventStatus() {

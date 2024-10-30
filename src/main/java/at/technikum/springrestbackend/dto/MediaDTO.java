@@ -6,8 +6,6 @@ import jakarta.validation.constraints.NotBlank;
 
 public class MediaDTO {
     private String mediaID;
-    @NotBlank
-    @Valid
     private String filePath;
     private String eventID;
     @NotBlank

@@ -109,6 +109,7 @@ public class EventServices {
     }
 
     public EventModel save(EventModel eventModel){
+
         return eventRepository.save(eventModel);
     }
 
@@ -131,12 +132,23 @@ public class EventServices {
         updatedEvent.setEventDescription(updatedEventDTO.getEventDescription());
         updatedEvent.setEventStatus(updatedEventDTO.getEventStatus());
 
-        if (updatedEvent.getCreator().getUserID().equals(userID)){
-            user.getCreatedEvents().add(updatedEvent);
-            userRepository.save(user);
-        }
+        user.getCreatedEvents().add(updatedEvent);
+        userRepository.save(user);
 
-        return eventRepository.save(updatedEvent);
+        return save(updatedEvent);
+    }
+
+    public EventModel updateStatus(EventModel event, UserModel user, String status) {
+
+        isAuthorized(event, user.getUserID());
+
+        user.getCreatedEvents().remove(event);
+        event.setEventStatus(status);
+        user.getCreatedEvents().add(event);
+
+        userRepository.save(user);
+
+        return eventRepository.save(event);
     }
 
     public void addComment(EventModel event, CommentModel comment) {
@@ -242,6 +254,11 @@ public class EventServices {
         // Save the updated event and user
         userServices.save(user);
         return save(event);
+    }
+
+    public void createEvent(EventModel event, UserModel creator) {
+        save(event);
+        userServices.addCreatedEvent(creator, event);
     }
 }
 

@@ -60,18 +60,18 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     // Extracts the JWT from the Authorization header
     private String getJwtFromRequest(HttpServletRequest request) {
-
         final String authorizationHeader = request.getHeader("Authorization");
-
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            return authorizationHeader.substring(7);
+            return authorizationHeader.substring(7); // Extract token
         }
-        return null;
+        return null; // No token found
     }
 
     // Handles the response in case of an invalid JWT
     private void handleInvalidJwt(HttpServletResponse response) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.getWriter().write("Invalid or expired token");
+        response.getWriter().flush();
     }
 
     // Authenticates the user and sets the security context

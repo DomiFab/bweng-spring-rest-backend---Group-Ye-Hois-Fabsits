@@ -1,10 +1,7 @@
 package at.technikum.springrestbackend.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
 
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -12,20 +9,15 @@ import java.util.Set;
 @Table (name="events")
 public class EventModel {
 
-    @Positive
     @Id
     private String eventID;
-    @NotBlank
     private String eventName;
-    @NotBlank
     private String eventLocation;
-    private LocalDateTime eventDate;
     private String eventPicture;
     private String eventDescription;
     private String eventStatus;
     // Soft-Delete-Attribute in case deletion was an accident
     private boolean isDeleted = false;
-    @NotBlank
     @ManyToOne
     @JoinColumn(name = "fk_creator") //foreign key
     private UserModel creator;
@@ -47,15 +39,13 @@ public class EventModel {
 
     //Event Creation
     public EventModel(String eventID, String eventName, String eventLocation,
-                      String eventDescription, UserModel creator, String eventStatus,
-                      LocalDateTime eventDate) {
+                      String eventDescription, UserModel creator, String eventStatus) {
         this.eventID = eventID;
         this.eventName = eventName;
         this.eventLocation = eventLocation;
         this.eventDescription = eventDescription;
         this.creator = creator;
         this.eventStatus = eventStatus;
-        this.eventDate = eventDate;
     }
 
     public EventModel(String eventID, String eventName, String eventLocation,
@@ -163,11 +153,4 @@ public class EventModel {
         this.eventComments = eventComments;
     }
 
-    public LocalDateTime getEventDate() {
-        return eventDate;
-    }
-
-    public void setEventDate(LocalDateTime eventDate) {
-        this.eventDate = eventDate;
-    }
 }

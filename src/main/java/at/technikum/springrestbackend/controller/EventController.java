@@ -48,16 +48,14 @@ public class EventController {
     //========================
     // Event CRUD Operations:
     //========================
-    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PostMapping()
     @ResponseStatus(HttpStatus.CREATED)
-    public DisplayEventDTO createEvent (@RequestPart("eventData") @Valid CreateEventDTO eventDTO,
-                                   @RequestPart("file") MultipartFile file) {
+    public DisplayEventDTO createEvent (@RequestBody @Valid CreateEventDTO eventDTO) {
 
         String username = SecurityUtil.getCurrentUserName();
         UserModel creator = userServices.findByUsername(username);
         EventModel event = eventMapper.toEntity(eventDTO, creator);
-        fileService.updateFrontPicture(file, event);
-        userServices.addCreatedEvent(creator, event);
+        eventServices.createEvent(event, creator);
         return eventMapper.toDisplayDTO(event, creator.getUserID());
     }
 
@@ -81,7 +79,19 @@ public class EventController {
         return eventMapper.toDisplayDTO(updatedEvent, user.getUserID());
     }
 
-    @PutMapping("/{eventID}/banner")
+    @PutMapping("/{eventID}/status")
+    @ResponseStatus(HttpStatus.OK)
+    public DisplayEventDTO updateStatus (@PathVariable String eventID,
+                                        @RequestPart("status") String status) {
+
+        String username = SecurityUtil.getCurrentUserName();
+        UserModel user = userServices.findByUsername(username);
+        EventModel event = eventServices.find(eventID);
+        EventModel updatedEvent = eventServices.updateStatus(event, user, status);
+        return eventMapper.toDisplayDTO(updatedEvent, user.getUserID());
+    }
+
+    @PutMapping(value = "/{eventID}/banner", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     @ResponseStatus(HttpStatus.OK)
     public DisplayEventDTO updateEventBanner (@PathVariable String eventID,
                                          @RequestPart("file") MultipartFile file) {
