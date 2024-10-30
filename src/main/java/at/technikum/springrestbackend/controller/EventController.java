@@ -71,18 +71,18 @@ public class EventController {
     @PutMapping("/{eventID}")
     @ResponseStatus(HttpStatus.OK)
     public DisplayEventDTO updateEvent (@PathVariable String eventID,
-                                   @Valid CreateEventDTO updatedEventDTO) {
+                                   @RequestBody @Valid CreateEventDTO updatedEventDTO) {
 
         String username = SecurityUtil.getCurrentUserName();
         UserModel user = userServices.findByUsername(username);
-        EventModel updatedEvent = eventServices.update(eventID, updatedEventDTO, user.getUserID());
+        EventModel updatedEvent = eventServices.update(eventID, updatedEventDTO, user);
         return eventMapper.toDisplayDTO(updatedEvent, user.getUserID());
     }
 
     @PutMapping("/{eventID}/status")
     @ResponseStatus(HttpStatus.OK)
     public DisplayEventDTO updateStatus (@PathVariable String eventID,
-                                        @RequestPart("status") String status) {
+                                        @RequestParam("status") String status) {
 
         String username = SecurityUtil.getCurrentUserName();
         UserModel user = userServices.findByUsername(username);
@@ -198,7 +198,7 @@ public class EventController {
     @ResponseStatus(HttpStatus.OK)
     public DisplayCommentDTO updateComment (@PathVariable String eventID,
                                             @PathVariable String commentID,
-                                            @Valid CreateCommentDTO commentDTO) {
+                                            @RequestBody @Valid CreateCommentDTO commentDTO) {
 
         String username = SecurityUtil.getCurrentUserName();
         UserModel user = userServices.findByUsername(username);

@@ -113,7 +113,7 @@ public class EventServices {
         return eventRepository.save(eventModel);
     }
 
-    public EventModel update(String eventID, CreateEventDTO updatedEventDTO, String userID) {
+    public EventModel update(String eventID, CreateEventDTO updatedEventDTO, UserModel user) {
 
         //catching the case when an entity with the id does not exist
         if (!idExists(eventID)) {
@@ -121,9 +121,8 @@ public class EventServices {
         }
         //get the existing Event from the DB and THEN set new values
         EventModel updatedEvent = find(eventID);
-        UserModel user = userServices.findByID(userID);
 
-        isAuthorized(updatedEvent, userID);
+        isAuthorized(updatedEvent, user.getUserID());
 
         user.getCreatedEvents().remove(updatedEvent);
 
