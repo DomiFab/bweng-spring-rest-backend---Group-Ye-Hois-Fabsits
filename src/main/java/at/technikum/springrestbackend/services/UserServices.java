@@ -97,10 +97,10 @@ public class UserServices {
             eventRepository.save(attending);
         }
 
-        if (!updatedUserDTO.getUsername().isEmpty()) {
+        if (updatedUserDTO.getUsername() != null) {
             user.setUsername(updatedUserDTO.getUsername());
         }
-        if (!updatedUserDTO.getEmail().isEmpty()) {
+        if (updatedUserDTO.getEmail() != null) {
             user.setEmail(updatedUserDTO.getEmail());
         }
 
