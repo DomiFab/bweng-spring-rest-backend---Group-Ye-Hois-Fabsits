@@ -63,6 +63,9 @@ public class UserServices {
     }
 
     public UserModel findByUsername(String username) {
+        if (username == null || username.isEmpty() || username.equals("anonymousUser")) {
+            return new UserModel();
+        }
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with username: " + username));
     }

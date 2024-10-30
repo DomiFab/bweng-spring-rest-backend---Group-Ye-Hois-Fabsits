@@ -65,7 +65,7 @@ public class EventController {
 
         String username = SecurityUtil.getCurrentUserName();
         EventModel event = eventServices.find(eventID);
-        return eventMapper.toDisplayDTO(event, userServices.findByUsername(username).getUserID());
+        return eventServices.eventDisplay(event, userServices.findByUsername(username));
     }
 
     @PutMapping("/{eventID}")

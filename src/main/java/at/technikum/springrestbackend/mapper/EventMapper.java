@@ -33,6 +33,22 @@ public class EventMapper {
         );
     }
 
+    public DisplayEventDTO toNoAuthDTO (EventModel eventModel) {
+
+        return new DisplayEventDTO(
+                eventModel.getEventID(),
+                eventModel.getEventName(),
+                eventModel.getEventLocation(),
+                eventModel.getEventStatus(),
+                eventModel.getEventDescription(),
+                eventModel.getEventPicture(),
+                eventModel.isDeleted(),
+                userMapper.toSimpleDTO(eventModel.getCreator()),
+                false,
+                (long) eventModel.getAttendingUsers().size()
+        );
+    }
+
     //creating event
     public EventModel toEntity(CreateEventDTO eventDTO, UserModel creator) {
         //DataBank entry requires the id as a primary key

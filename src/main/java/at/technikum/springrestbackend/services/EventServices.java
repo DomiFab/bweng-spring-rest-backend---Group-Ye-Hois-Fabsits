@@ -113,6 +113,13 @@ public class EventServices {
         return eventRepository.save(eventModel);
     }
 
+    public DisplayEventDTO eventDisplay (EventModel event, UserModel user) {
+        if (user.getUserID() == null || user.getUserID().isEmpty()) {
+            return eventMapper.toNoAuthDTO(event);
+        }
+        return eventMapper.toDisplayDTO(event, user.getUserID());
+    }
+
     public EventModel update(String eventID, CreateEventDTO updatedEventDTO, UserModel user) {
 
         //catching the case when an entity with the id does not exist
