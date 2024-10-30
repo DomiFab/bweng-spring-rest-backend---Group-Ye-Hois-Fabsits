@@ -12,13 +12,13 @@ public class MediaModel {
     @NotBlank
     private String fileURL;
     @ManyToOne
-    @JoinColumn(name = "fk_belong_to_event") //foreign key
+    @JoinColumn(name = "fk_belong_to_event", nullable = true) //foreign key
     private EventModel event;
     @ManyToOne
-    @JoinColumn(name = "fk_uploader")
+    @JoinColumn(name = "fk_uploader", nullable = true)
     private UserModel uploader;
     @ManyToOne
-    @JoinColumn(name = "fk_comment")
+    @JoinColumn(name = "fk_comment", nullable = true)
     private CommentModel comment;
 
     public MediaModel() {

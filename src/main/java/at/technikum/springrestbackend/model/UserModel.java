@@ -35,6 +35,10 @@ public class UserModel {
 
     }
 
+    public UserModel(String username) {
+        this.username = username;
+    }
+
     //registration
     public UserModel(String userId, String username, String password, String email) {
         this.userID = userId;

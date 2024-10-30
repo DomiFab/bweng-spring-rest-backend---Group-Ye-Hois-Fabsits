@@ -19,7 +19,7 @@ public class EventModel {
     // Soft-Delete-Attribute in case deletion was an accident
     private boolean isDeleted = false;
     @ManyToOne
-    @JoinColumn(name = "fk_creator") //foreign key
+    @JoinColumn(name = "fk_creator", nullable = true) //foreign key
     private UserModel creator;
     @ManyToMany
     @JoinTable(

@@ -1,8 +1,6 @@
 package at.technikum.springrestbackend.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -15,15 +13,11 @@ public class CommentModel {
     private String content;
     private String isReplyToCommentID;
     private boolean isDeleted = false;
-    @Valid
-    @NotBlank
     @ManyToOne
-    @JoinColumn(name = "fk_author") //foreign key
+    @JoinColumn(name = "fk_author", nullable = true) //foreign key
     private UserModel author;
-    @Valid
-    @NotBlank
     @ManyToOne
-    @JoinColumn(name = "fk_event_to_comment")
+    @JoinColumn(name = "fk_event_to_comment", nullable = true)
     private EventModel event;
     @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<MediaModel> media = new HashSet<>();

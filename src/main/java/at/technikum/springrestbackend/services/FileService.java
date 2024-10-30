@@ -108,13 +108,12 @@ public class FileService {
     }
 
     public void updateProfilePicture(MultipartFile file, UserModel userModel) {
-        // Validate the input file
-        if (file.isEmpty()) {
-            throw new IllegalArgumentException("File must not be empty.");
-        }
         // Delete old file
         if (userModel.getProfilePicture() != null) {
             deleteFile(userModel.getProfilePicture().replace("http://localhost:9000/files", ""));
+        }
+        if (file.isEmpty()) {
+            return;
         }
         // Upload the new file
         String fileName = UUID.randomUUID().toString(); // Generate a unique file name
