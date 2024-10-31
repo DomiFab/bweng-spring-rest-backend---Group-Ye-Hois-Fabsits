@@ -1,6 +1,8 @@
 package at.technikum.springrestbackend.model;
 
 import jakarta.persistence.*;
+
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -12,6 +14,7 @@ public class CommentModel {
     private String title;
     private String content;
     private String isReplyToCommentID;
+    private LocalDateTime postedAt;
     private boolean isDeleted = false;
     @ManyToOne
     @JoinColumn(name = "fk_author", nullable = true) //foreign key
@@ -27,13 +30,15 @@ public class CommentModel {
 
     //for creating post
     public CommentModel(String commentID, String title, String content,
-                        String isReplyToCommentID, UserModel author, EventModel event) {
+                        String isReplyToCommentID, UserModel author, EventModel event,
+                        LocalDateTime postedAt) {
         this.commentID = commentID;
         this.title = title;
         this.content = content;
         this.isReplyToCommentID = isReplyToCommentID;
         this.author = author;
         this.event = event;
+        this.postedAt = postedAt;
     }
 
     public CommentModel(String commentID, String title, String content,
@@ -109,5 +114,13 @@ public class CommentModel {
 
     public void setIsReplyToCommentID(String isReplyToCommentID) {
         this.isReplyToCommentID = isReplyToCommentID;
+    }
+
+    public LocalDateTime getPostedAt() {
+        return postedAt;
+    }
+
+    public void setPostedAt(LocalDateTime postedAt) {
+        this.postedAt = postedAt;
     }
 }

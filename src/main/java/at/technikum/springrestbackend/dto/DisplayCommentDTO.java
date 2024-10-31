@@ -3,6 +3,7 @@ package at.technikum.springrestbackend.dto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,13 +18,16 @@ public class DisplayCommentDTO {
     private UserDTO author;
     private String content;
     private String replyToCommentID;
+    private LocalDateTime postedAt;
+    private boolean isDeleted;
     private List<String> mediaURLs = new ArrayList<>();
 
     public DisplayCommentDTO() {
     }
 
     public DisplayCommentDTO(String commentID, String eventID, String title, UserDTO author,
-                             String content, String replyToCommentID, List<String> mediaURLs) {
+                             String content, String replyToCommentID, List<String> mediaURLs,
+                             boolean isDeleted, LocalDateTime postedAt) {
         this.commentID = commentID;
         this.eventID = eventID;
         this.title = title;
@@ -31,6 +35,8 @@ public class DisplayCommentDTO {
         this.content = content;
         this.replyToCommentID = replyToCommentID;
         this.mediaURLs = mediaURLs;
+        this.isDeleted = isDeleted;
+        this.postedAt = postedAt;
     }
 
     public String getCommentID() {
@@ -87,5 +93,21 @@ public class DisplayCommentDTO {
 
     public void setMediaURLs(List<String> mediaURLs) {
         this.mediaURLs = mediaURLs;
+    }
+
+    public LocalDateTime getPostedAt() {
+        return postedAt;
+    }
+
+    public void setPostedAt(LocalDateTime postedAt) {
+        this.postedAt = postedAt;
+    }
+
+    public boolean isDeleted() {
+        return isDeleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        isDeleted = deleted;
     }
 }

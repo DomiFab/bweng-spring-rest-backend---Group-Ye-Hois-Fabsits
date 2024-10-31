@@ -9,6 +9,7 @@ import at.technikum.springrestbackend.services.MediaServices;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Component
@@ -26,7 +27,8 @@ public class CommentMapper {
                 commentDTO.getTitle(),
                 commentDTO.getContent(),
                 commentDTO.getReplyToCommentID(),
-                author, event
+                author, event,
+                LocalDateTime.now()
         );
     }
 
@@ -39,7 +41,9 @@ public class CommentMapper {
                 userMapper.toSimpleDTO(commentModel.getAuthor()),
                 commentModel.getContent(),
                 commentModel.getIsReplyToCommentID(),
-                mediaServices.getMediaFromComment(commentModel)
+                mediaServices.getMediaFromComment(commentModel),
+                commentModel.isDeleted(),
+                commentModel.getPostedAt()
         );
     }
 
