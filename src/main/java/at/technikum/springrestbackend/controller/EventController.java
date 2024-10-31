@@ -172,6 +172,7 @@ public class EventController {
         EventModel event = eventServices.find(eventID);
         UserModel author = userServices.findByUsername(username);
         CommentModel comment = commentMapper.toEntity(commentDTO, event, author);
+        commentServices.save(comment);
         fileService.updateCommentMedia(files, comment, event, author);
         eventServices.addComment(event, comment);
         userServices.addCreatedComment(author, comment);
