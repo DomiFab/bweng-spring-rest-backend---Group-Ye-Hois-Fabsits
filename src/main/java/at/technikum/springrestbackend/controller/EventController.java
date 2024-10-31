@@ -82,7 +82,7 @@ public class EventController {
     @PutMapping("/{eventID}/status")
     @ResponseStatus(HttpStatus.OK)
     public DisplayEventDTO updateStatus (@PathVariable String eventID,
-                                        @RequestParam("status") String status) {
+                                         @RequestBody String status) {
 
         String username = SecurityUtil.getCurrentUserName();
         UserModel user = userServices.findByUsername(username);
