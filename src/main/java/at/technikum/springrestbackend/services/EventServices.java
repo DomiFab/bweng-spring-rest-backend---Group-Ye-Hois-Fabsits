@@ -34,16 +34,22 @@ public class EventServices {
     private final MediaMapper mediaMapper;
     @Autowired
     private UserMapper userMapper;
+    private final CommentRepository commentRepository;
+    private final MediaRepository mediaRepository;
 
     @Autowired
     public EventServices(EventRepository eventRepository, UserServices userServices, EventMapper eventMapper,
-                         UserRepository userRepository, CommentMapper commentMapper, MediaMapper mediaMapper) {
+                         UserRepository userRepository, CommentMapper commentMapper, MediaMapper mediaMapper,
+                         CommentRepository commentRepository,
+                         MediaRepository mediaRepository) {
         this.eventRepository = eventRepository;
         this.userServices = userServices;
         this.eventMapper = eventMapper;
         this.userRepository = userRepository;
         this.commentMapper = commentMapper;
         this.mediaMapper = mediaMapper;
+        this.commentRepository = commentRepository;
+        this.mediaRepository = mediaRepository;
     }
 
     public boolean idExists(String id){
@@ -184,6 +190,9 @@ public class EventServices {
             user.getAttendingEvents().remove(event);
             userRepository.save(user);
         }
+
+        commentRepository.deleteAllByEvent(event);
+        mediaRepository.deleteAllByEvent(event);
 
         event.getCreator().getCreatedEvents().remove(event);
         userRepository.save(event.getCreator());

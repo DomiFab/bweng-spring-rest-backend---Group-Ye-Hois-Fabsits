@@ -176,7 +176,7 @@ public class FileService {
                                    EventModel eventModel, UserModel author) {
 
         // Delete old Medias
-        if (files.isEmpty()) {
+        if (files.isEmpty() || files == null) {
             removeOldCommentPictures(eventModel, commentModel, author);
             return;
         }

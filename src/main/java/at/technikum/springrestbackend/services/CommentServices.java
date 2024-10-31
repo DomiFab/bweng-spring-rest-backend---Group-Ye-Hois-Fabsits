@@ -4,6 +4,7 @@ import at.technikum.springrestbackend.dto.CreateCommentDTO;
 import at.technikum.springrestbackend.exception.EntityNotFoundException;
 import at.technikum.springrestbackend.model.CommentModel;
 import at.technikum.springrestbackend.model.EventModel;
+import at.technikum.springrestbackend.model.MediaModel;
 import at.technikum.springrestbackend.model.UserModel;
 import at.technikum.springrestbackend.repository.CommentRepository;
 import at.technikum.springrestbackend.repository.MediaRepository;
@@ -83,11 +84,7 @@ public class CommentServices {
             throw new EntityNotFoundException("This Event does not have this Comment.");
         }
 
-        if (!comment.getAuthor().getUserID().equals(userID) &&
-                !event.getCreator().getUserID().equals(userID) &&
-                !user.isAdmin()) {
-            throw new AccessDeniedException("You do not have permission to perform this action.");
-        }
+        isTrulyAuthorized(comment, event, user);
 
         user.getCreatedComments().remove(comment);
         userServices.save(user);
@@ -106,6 +103,37 @@ public class CommentServices {
 
         return comment;
     }
+
+    public CommentModel deleteImage(String eventID, String commentID, String mediaID, UserModel user) {
+
+        CommentModel comment = find(commentID);
+        EventModel event = eventServices.find(eventID);
+        MediaModel media = mediaRepository.findById(mediaID).orElseThrow();
+
+        //author, event creator or admin only
+        isTrulyAuthorized(comment, event, user);
+
+        event.getEventComments().remove(comment);
+        user.getCreatedComments().remove(comment);
+
+        comment.getMedia().remove(media);
+
+        event.getEventComments().add(comment);
+        user.getCreatedComments().add(comment);
+
+        eventServices.save(event);
+        userServices.save(user);
+        return save(comment);
+    }
+
+    public void isTrulyAuthorized(CommentModel comment, EventModel event, UserModel user) {
+        if (!comment.getAuthor().getUserID().equals(user.getUserID()) &&
+                !event.getCreator().getUserID().equals(user.getUserID()) &&
+                !user.isAdmin()) {
+            throw new AccessDeniedException("You do not have permission to perform this action.");
+        }
+    }
+
     public void isAuthorized(CommentModel comment, String userID) {
         if (!comment.getAuthor().getUserID().equals(userID) &&
                 !userServices.findByID(userID).isAdmin()) {

@@ -173,9 +173,7 @@ public class EventController {
         UserModel author = userServices.findByUsername(username);
         CommentModel comment = commentMapper.toEntity(commentDTO, event, author);
         commentServices.save(comment);
-        if (files != null) {
-            fileService.updateCommentMedia(files, comment, event, author);
-        }
+        fileService.updateCommentMedia(files, comment, event, author);
         eventServices.addComment(event, comment);
         userServices.addCreatedComment(author, comment);
         return commentMapper.toDisplayDTO(comment);
@@ -207,6 +205,17 @@ public class EventController {
         UserModel user = userServices.findByUsername(username);
         CommentModel comment = commentServices.update(eventID, commentID, commentDTO, user.getUserID());
         return commentMapper.toDisplayDTO(comment);
+    }
+
+    @DeleteMapping("/{eventID}/comments/{commentID}/image/{mediaID}")
+    @ResponseStatus(HttpStatus.OK)
+    public DisplayCommentDTO deleteCommentImage (@PathVariable String eventID,
+                                                 @PathVariable String commentID,
+                                                 @PathVariable String mediaID) {
+
+        String username = SecurityUtil.getCurrentUserName();
+        UserModel user = userServices.findByUsername(username);
+        return commentMapper.toDisplayDTO(commentServices.deleteImage(eventID, commentID, mediaID, user));
     }
 
     @DeleteMapping("/{eventID}/comments/{commentID}")
