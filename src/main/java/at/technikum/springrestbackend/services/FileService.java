@@ -112,7 +112,8 @@ public class FileService {
         if (userModel.getProfilePicture() != null) {
             deleteFile(userModel.getProfilePicture().replace("http://localhost:9000/files", ""));
         }
-        if (file.isEmpty()) {
+
+        if (file == null || file.isEmpty()) {
             return;
         }
         // Upload the new file
@@ -176,7 +177,7 @@ public class FileService {
                                    EventModel eventModel, UserModel author) {
 
         // Delete old Medias
-        if (files.isEmpty() || files == null) {
+        if (files == null || files.isEmpty()) {
             removeOldCommentPictures(eventModel, commentModel, author);
             return;
         }

@@ -74,7 +74,7 @@ public class UserController {
 
     @PutMapping(value = "/avatar", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     @ResponseStatus(HttpStatus.OK)
-    public UserDTO uploadProfilePicture(@RequestPart("file")MultipartFile file) {
+    public UserDTO uploadProfilePicture(@RequestPart(value = "file", required = false) MultipartFile file) {
 
         String authUser = SecurityUtil.getCurrentUserName();
         fileService.updateProfilePicture(file, userServices.findByUsername(authUser));
