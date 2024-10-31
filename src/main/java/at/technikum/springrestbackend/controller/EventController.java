@@ -166,14 +166,16 @@ public class EventController {
     @ResponseStatus(HttpStatus.CREATED)
     public DisplayCommentDTO createComment (@PathVariable String eventID,
                                      @RequestPart("commentData") @Valid CreateCommentDTO commentDTO,
-                                     @RequestPart("files") List<MultipartFile> files) {
+                                     @RequestPart(value ="files",required = false) List<MultipartFile> files) {
 
         String username = SecurityUtil.getCurrentUserName();
         EventModel event = eventServices.find(eventID);
         UserModel author = userServices.findByUsername(username);
         CommentModel comment = commentMapper.toEntity(commentDTO, event, author);
         commentServices.save(comment);
-        fileService.updateCommentMedia(files, comment, event, author);
+        if (files != null) {
+            fileService.updateCommentMedia(files, comment, event, author);
+        }
         eventServices.addComment(event, comment);
         userServices.addCreatedComment(author, comment);
         return commentMapper.toDisplayDTO(comment);
