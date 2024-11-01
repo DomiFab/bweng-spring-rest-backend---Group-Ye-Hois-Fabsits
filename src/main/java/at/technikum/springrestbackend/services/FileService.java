@@ -206,36 +206,42 @@ public class FileService {
 
     private void removeOldFrontPictureData(EventModel event) {
 
-        if (event.getEventPicture() != null || !event.getEventPicture().isEmpty()) {
-            MediaModel media = mediaRepository.findByFileURL(event.getEventPicture());
-
-            mediaRepository.deleteByFileURL(event.getEventPicture());
-            event.getCreator().getUploadedMedia().remove(media);
-            deleteFile(event.getEventPicture().replace("http://localhost:9000/files", ""));
-
-            event.setEventPicture("");
-
-            eventRepository.save(event);
-            userRepository.save(event.getCreator());
+        if (event.getEventPicture() == null || event.getEventPicture().isEmpty()) {
+            return;
         }
+
+        MediaModel media = mediaRepository.findByFileURL(event.getEventPicture());
+
+        mediaRepository.deleteByFileURL(event.getEventPicture());
+        event.getCreator().getUploadedMedia().remove(media);
+        deleteFile(event.getEventPicture().replace("http://localhost:9000/files", ""));
+
+        event.setEventPicture("");
+
+        eventRepository.save(event);
+        userRepository.save(event.getCreator());
+
     }
 
     private void removeOldCommentPictures(EventModel event, CommentModel comment, UserModel author) {
 
-        if (comment.getMedia() != null || !comment.getMedia().isEmpty()) {
-            for (MediaModel media : comment.getMedia()) {
-
-                event.getGalleryPictures().remove(media);
-                comment.getMedia().remove(media);
-                author.getUploadedMedia().remove(media);
-
-                deleteFile(media.getFileURL().replace("http://localhost:9000/files", ""));
-            }
-
-            mediaRepository.deleteAllByComment(comment);
-            eventRepository.save(event);
-            commentRepository.save(comment);
-            userRepository.save(author);
+        if (comment.getMedia() == null || comment.getMedia().isEmpty()) {
+            return;
         }
+
+        for (MediaModel media : comment.getMedia()) {
+
+            event.getGalleryPictures().remove(media);
+            comment.getMedia().remove(media);
+            author.getUploadedMedia().remove(media);
+
+            deleteFile(media.getFileURL().replace("http://localhost:9000/files", ""));
+        }
+
+        mediaRepository.deleteAllByComment(comment);
+        eventRepository.save(event);
+        commentRepository.save(comment);
+        userRepository.save(author);
+
     }
 }
