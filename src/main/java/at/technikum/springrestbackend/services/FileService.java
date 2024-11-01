@@ -109,7 +109,7 @@ public class FileService {
 
     public void updateProfilePicture(MultipartFile file, UserModel userModel) {
         // Delete old file
-        if (userModel.getProfilePicture() != null || !userModel.getProfilePicture().isEmpty()) {
+        if (userModel.getProfilePicture() != null && !userModel.getProfilePicture().isEmpty()) {
             deleteFile(userModel.getProfilePicture().replace("http://localhost:9000/files", ""));
         }
         if (file == null || file.isEmpty()) {
@@ -172,35 +172,25 @@ public class FileService {
         }
     }
 
-    public void updateCommentMedia(List<MultipartFile> files, CommentModel commentModel,
+    public void updateCommentMedia(MultipartFile file, CommentModel commentModel,
                                    EventModel eventModel, UserModel author) {
 
         // Delete old Medias
-        if (files == null || files.isEmpty()) {
+        if (file == null || file.isEmpty()) {
             removeOldCommentPictures(eventModel, commentModel, author);
             return;
         }
         removeOldCommentPictures(eventModel, commentModel, author);
 
-        for (MultipartFile file : files) {
-            try {
-                String fileName = UUID.randomUUID().toString(); // Generate unique file name
-                String filePath = "/event/uploads/" + fileName;
-                String fileURL = "http://localhost:9000/files" + filePath;
-                MediaModel media = new MediaModel(fileName, fileURL, eventModel, author, commentModel);
-
-                uploadFile(filePath, file.getInputStream(), file.getContentType());
-
-                commentModel.getMedia().add(media);
-                eventModel.getGalleryPictures().add(media);
-                author.getUploadedMedia().add(media);
-                mediaRepository.save(media);
-                commentRepository.save(commentModel);
-                eventRepository.save(eventModel);
-                userRepository.save(author);
-            } catch (Exception e) {
-                throw new RuntimeException("Error uploading files " + file.getOriginalFilename(), e);
-            }
+        MediaModel media = new MediaModel(UUID.randomUUID().toString(), "", eventModel, author, commentModel);
+        String filePath = "/event/uploads/" + media.getMediaID();
+        String fileURL = "http://localhost:9000/files" + filePath;
+        media.setFileURL(fileURL);
+        mediaRepository.save(media);
+        try {
+            this.uploadFile(filePath, file.getInputStream(), file.getContentType());
+        } catch (Exception e) {
+            throw new RuntimeException("Error uploading files " + file.getOriginalFilename(), e);
         }
     }
 
@@ -210,38 +200,19 @@ public class FileService {
             return;
         }
 
-        MediaModel media = mediaRepository.findByFileURL(event.getEventPicture());
-
-        mediaRepository.deleteByFileURL(event.getEventPicture());
-        event.getCreator().getUploadedMedia().remove(media);
-        deleteFile(event.getEventPicture().replace("http://localhost:9000/files", ""));
-
         event.setEventPicture("");
 
-        eventRepository.save(event);
-        userRepository.save(event.getCreator());
+        mediaRepository.deleteByFileURL(event.getEventPicture());
+        deleteFile(event.getEventPicture().replace("http://localhost:9000/files", ""));
 
+        eventRepository.save(event);
     }
 
     private void removeOldCommentPictures(EventModel event, CommentModel comment, UserModel author) {
 
-        if (comment.getMedia() == null || comment.getMedia().isEmpty()) {
-            return;
-        }
-
         for (MediaModel media : comment.getMedia()) {
-
-            event.getGalleryPictures().remove(media);
-            comment.getMedia().remove(media);
-            author.getUploadedMedia().remove(media);
-
+            mediaRepository.delete(media);
             deleteFile(media.getFileURL().replace("http://localhost:9000/files", ""));
         }
-
-        mediaRepository.deleteAllByComment(comment);
-        eventRepository.save(event);
-        commentRepository.save(comment);
-        userRepository.save(author);
-
     }
 }

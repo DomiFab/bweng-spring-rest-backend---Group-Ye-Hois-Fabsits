@@ -3,13 +3,13 @@ package at.technikum.springrestbackend.repository;
 import at.technikum.springrestbackend.model.CommentModel;
 import at.technikum.springrestbackend.model.EventModel;
 import at.technikum.springrestbackend.model.MediaModel;
-import org.springframework.data.repository.ListCrudRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
-public interface MediaRepository extends ListCrudRepository<MediaModel, String> {
+public interface MediaRepository extends JpaRepository<MediaModel, String> {
 
     Optional<MediaModel> deleteAllByEvent(EventModel event);
     void deleteAllByComment(CommentModel comment);

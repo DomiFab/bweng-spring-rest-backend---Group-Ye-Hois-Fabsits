@@ -23,11 +23,11 @@ public class UserModel {
     private boolean isAdmin = false;
     @ManyToMany(mappedBy = "attendingUsers")
     private Set<EventModel> attendingEvents = new HashSet<>();
-    @OneToMany(mappedBy = "creator")
+    @OneToMany(mappedBy = "creator", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<EventModel> createdEvents = new HashSet<>();
-    @OneToMany(mappedBy = "author")
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<CommentModel> createdComments = new HashSet<>();
-    @OneToMany(mappedBy = "uploader")
+    @OneToMany(mappedBy = "uploader", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<MediaModel> uploadedMedia = new HashSet<>();
 
 

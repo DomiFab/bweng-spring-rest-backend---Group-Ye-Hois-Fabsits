@@ -23,8 +23,6 @@ public class CommentServices {
     @Autowired
     private UserServices userServices;
     @Autowired
-    private FileService fileService;
-    @Autowired
     private EventServices eventServices;
 
     public CommentServices(CommentRepository postRepository) {
@@ -54,24 +52,17 @@ public class CommentServices {
             throw new EntityNotFoundException("Comment with provided ID [" + commentID + "] not found.");
         }
 
-        EventModel event = eventServices.find(eventID);
         CommentModel updatedComment = find(commentID);
-        UserModel user = userServices.findByID(userID);
+        EventModel event = eventServices.find(eventID);
         isAuthorized(updatedComment, userID);
 
-        event.getEventComments().remove(updatedComment);
+        if (updatedComment.getEvent() != event) {
+            throw new EntityNotFoundException("Event does not match the Comment's.");
+        }
 
         updatedComment.setContent(commentDTO.getContent());
 
-        if (updatedComment.getAuthor().getUserID().equals(userID)){
-            user.getCreatedComments().add(updatedComment);
-            userServices.save(user);
-        }
-
-        event.getEventComments().add(updatedComment);
-        eventServices.save(event);
-
-        return updatedComment;
+        return save(updatedComment);
     }
 
     public CommentModel delete(String eventID, String commentID, String userID){
@@ -86,43 +77,15 @@ public class CommentServices {
 
         isTrulyAuthorized(comment, event, user);
 
-        user.getCreatedComments().remove(comment);
-        userServices.save(user);
-        mediaRepository.deleteAllByComment(comment);
-
-        event.getEventComments().remove(comment);
+        List<MediaModel> mediaList = comment.getMedia().stream().toList();
+        if (!mediaList.isEmpty()) {
+            mediaRepository.delete(mediaList.getFirst());
+        }
 
         comment.setContent("");
         comment.setDeleted(true);
         comment.setTitle("<deleted>");
-        comment.getMedia().clear();
-        save(comment);
 
-        event.getEventComments().add(comment);
-        eventServices.save(event);
-
-        return comment;
-    }
-
-    public CommentModel deleteImage(String eventID, String commentID, String mediaID, UserModel user) {
-
-        CommentModel comment = find(commentID);
-        EventModel event = eventServices.find(eventID);
-        MediaModel media = mediaRepository.findById(mediaID).orElseThrow();
-
-        //author, event creator or admin only
-        isTrulyAuthorized(comment, event, user);
-
-        event.getEventComments().remove(comment);
-        user.getCreatedComments().remove(comment);
-
-        comment.getMedia().remove(media);
-
-        event.getEventComments().add(comment);
-        user.getCreatedComments().add(comment);
-
-        eventServices.save(event);
-        userServices.save(user);
         return save(comment);
     }
 

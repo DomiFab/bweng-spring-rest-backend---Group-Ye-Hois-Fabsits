@@ -162,13 +162,6 @@ public class EventServices {
         return eventRepository.save(event);
     }
 
-    public void addComment(EventModel event, CommentModel comment) {
-        CommentModel actualComment = commentRepository.findById(comment.getCommentID()).orElseThrow();
-        EventModel actualEvent = find(event.getEventID());
-        actualEvent.getEventComments().add(actualComment);
-        save(actualEvent);
-    }
-
     //set isDeleted flag for SoftDelete
     public EventModel delete(String eventID){
         Optional<EventModel> eventOptional = eventRepository.findById(eventID);
@@ -194,10 +187,8 @@ public class EventServices {
 
         commentRepository.deleteAllByEvent(event);
         mediaRepository.deleteAllByEvent(event);
-
-        event.getCreator().getCreatedEvents().remove(event);
-        userRepository.save(event.getCreator());
-
+//        event.getCreator().getCreatedEvents().remove(event);
+//        userRepository.save(event.getCreator());
         eventRepository.delete(event);
         return event;
     }
@@ -272,9 +263,8 @@ public class EventServices {
         return save(event);
     }
 
-    public void createEvent(EventModel event, UserModel creator) {
+    public void createEvent(EventModel event) {
         save(event);
-        userServices.addCreatedEvent(creator, event);
     }
 }
 

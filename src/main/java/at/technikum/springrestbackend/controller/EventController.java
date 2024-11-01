@@ -55,7 +55,7 @@ public class EventController {
         String username = SecurityUtil.getCurrentUserName();
         UserModel creator = userServices.findByUsername(username);
         EventModel event = eventMapper.toEntity(eventDTO, creator);
-        eventServices.createEvent(event, creator);
+        eventServices.createEvent(event);
         return eventMapper.toDisplayDTO(event, creator.getUserID());
     }
 
@@ -166,15 +166,14 @@ public class EventController {
     @ResponseStatus(HttpStatus.CREATED)
     public DisplayCommentDTO createComment (@PathVariable String eventID,
                                      @RequestPart("commentData") @Valid CreateCommentDTO commentDTO,
-                                     @RequestPart(value ="files",required = false) List<MultipartFile> files) {
+                                     @RequestPart(value ="files",required = false) MultipartFile file) {
 
         String username = SecurityUtil.getCurrentUserName();
         EventModel event = eventServices.find(eventID);
         UserModel author = userServices.findByUsername(username);
         CommentModel comment = commentMapper.toEntity(commentDTO, event, author);
-        fileService.updateCommentMedia(files, comment, event, author);
-        eventServices.addComment(event, comment);
-        userServices.addCreatedComment(author, comment);
+        commentServices.save(comment);
+        fileService.updateCommentMedia(file, comment, event, author);
         return commentMapper.toDisplayDTO(comment);
     }
 
@@ -204,17 +203,6 @@ public class EventController {
         UserModel user = userServices.findByUsername(username);
         CommentModel comment = commentServices.update(eventID, commentID, commentDTO, user.getUserID());
         return commentMapper.toDisplayDTO(comment);
-    }
-
-    @DeleteMapping("/{eventID}/comments/{commentID}/image/{mediaID}")
-    @ResponseStatus(HttpStatus.OK)
-    public DisplayCommentDTO deleteCommentImage (@PathVariable String eventID,
-                                                 @PathVariable String commentID,
-                                                 @PathVariable String mediaID) {
-
-        String username = SecurityUtil.getCurrentUserName();
-        UserModel user = userServices.findByUsername(username);
-        return commentMapper.toDisplayDTO(commentServices.deleteImage(eventID, commentID, mediaID, user));
     }
 
     @DeleteMapping("/{eventID}/comments/{commentID}")
