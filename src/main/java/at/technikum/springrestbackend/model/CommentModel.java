@@ -41,11 +41,14 @@ public class CommentModel {
         this.postedAt = postedAt;
     }
 
-    public CommentModel(String commentID, String title, String content,
-                        boolean isDeleted, UserModel author, EventModel event, Set<MediaModel> media) {
+    public CommentModel(String commentID, String title, String content, String isReplyToCommentID,
+                        LocalDateTime postedAt, boolean isDeleted, UserModel author,
+                        EventModel event, Set<MediaModel> media) {
         this.commentID = commentID;
         this.title = title;
         this.content = content;
+        this.isReplyToCommentID = isReplyToCommentID;
+        this.postedAt = postedAt;
         this.isDeleted = isDeleted;
         this.author = author;
         this.event = event;

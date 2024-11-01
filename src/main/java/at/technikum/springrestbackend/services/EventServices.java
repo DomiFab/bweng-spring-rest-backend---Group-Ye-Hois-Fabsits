@@ -115,7 +115,6 @@ public class EventServices {
     }
 
     public EventModel save(EventModel eventModel){
-
         return eventRepository.save(eventModel);
     }
 

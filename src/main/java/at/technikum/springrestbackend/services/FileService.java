@@ -109,10 +109,9 @@ public class FileService {
 
     public void updateProfilePicture(MultipartFile file, UserModel userModel) {
         // Delete old file
-        if (userModel.getProfilePicture() != null) {
+        if (userModel.getProfilePicture() != null || !userModel.getProfilePicture().isEmpty()) {
             deleteFile(userModel.getProfilePicture().replace("http://localhost:9000/files", ""));
         }
-
         if (file == null || file.isEmpty()) {
             return;
         }
@@ -149,7 +148,7 @@ public class FileService {
 
     public void updateFrontPicture(MultipartFile file, EventModel event) {
         try {
-            if (file.isEmpty()) {
+            if (file == null || file.isEmpty()) {
                 removeOldFrontPictureData(event);
                 return;
             }
@@ -207,7 +206,7 @@ public class FileService {
 
     private void removeOldFrontPictureData(EventModel event) {
 
-        if (event.getEventPicture() != null) {
+        if (event.getEventPicture() != null || !event.getEventPicture().isEmpty()) {
             MediaModel media = mediaRepository.findByFileURL(event.getEventPicture());
 
             mediaRepository.deleteByFileURL(event.getEventPicture());
@@ -223,7 +222,7 @@ public class FileService {
 
     private void removeOldCommentPictures(EventModel event, CommentModel comment, UserModel author) {
 
-        if (!comment.getMedia().isEmpty()) {
+        if (comment.getMedia() != null || !comment.getMedia().isEmpty()) {
             for (MediaModel media : comment.getMedia()) {
 
                 event.getGalleryPictures().remove(media);
