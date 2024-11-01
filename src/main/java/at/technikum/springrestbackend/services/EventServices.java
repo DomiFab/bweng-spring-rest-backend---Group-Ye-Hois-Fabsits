@@ -163,8 +163,10 @@ public class EventServices {
     }
 
     public void addComment(EventModel event, CommentModel comment) {
-        event.getEventComments().add(comment);
-        save(event);
+        CommentModel actualComment = commentRepository.findById(comment.getCommentID()).orElseThrow();
+        EventModel actualEvent = find(event.getEventID());
+        actualEvent.getEventComments().add(actualComment);
+        save(actualEvent);
     }
 
     //set isDeleted flag for SoftDelete

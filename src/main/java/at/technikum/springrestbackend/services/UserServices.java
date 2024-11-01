@@ -140,7 +140,9 @@ public class UserServices {
     }
 
     public void addCreatedComment(UserModel user, CommentModel comment) {
-        user.getCreatedComments().add(comment);
+        UserModel actualUser = userRepository.findById(user.getUserID()).orElseThrow();
+        CommentModel actualComment = commentRepository.findById(comment.getCommentID()).orElseThrow();
+        actualUser.getCreatedComments().add(actualComment);
         save(user);
     }
 
