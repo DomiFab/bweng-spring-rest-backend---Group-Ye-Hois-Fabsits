@@ -1,10 +1,12 @@
 package at.technikum.springrestbackend.services;
 
 import at.technikum.springrestbackend.dto.DisplayEventDTO;
+import at.technikum.springrestbackend.dto.FullUserDTO;
 import at.technikum.springrestbackend.mapper.EventMapper;
 import at.technikum.springrestbackend.model.EventModel;
 import at.technikum.springrestbackend.model.UserModel;
 import at.technikum.springrestbackend.repository.UserRepository;
+import jakarta.persistence.EntityExistsException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -15,14 +17,31 @@ public class AdminService {
 
     private final UserRepository userRepository;
     private final EventMapper eventMapper;
+    private final UserServices userServices;
 
-    public AdminService(UserRepository userRepository, EventMapper eventMapper) {
+    public AdminService(UserRepository userRepository, EventMapper eventMapper, UserServices userServices) {
         this.userRepository = userRepository;
         this.eventMapper = eventMapper;
+        this.userServices = userServices;
     }
 
-    public UserModel setUserAdmin(UserModel user, boolean isAdmin) {
-        user.setAdmin(isAdmin);
+    public UserModel updateUserDetails(UserModel user, FullUserDTO userDTO) {
+        if (userServices.usernameExists(userDTO.getUsername())) {
+            throw new EntityExistsException("Username already exists: " + userDTO.getUsername());
+        }
+        if (userServices.emailExists(userDTO.getEmail())) {
+            throw new EntityExistsException("Email already exists: " + userDTO.getEmail());
+        }
+
+        user.setAdmin(userDTO.isAdmin());
+
+        if (userDTO.getUsername() != null) {
+            user.setUsername(userDTO.getUsername());
+        }
+        if (userDTO.getEmail() != null) {
+            user.setEmail(userDTO.getEmail());
+        }
+
         return userRepository.save(user);
     }
 
