@@ -78,15 +78,17 @@ public class AdminController {
         UserModel user = userServices.findByID(userID);
         FullUserDTO userDTO = userMapper.toFullDTO(user);
         userDTO.setCreatedEvents(adminService.getCreatedEventsByUser(user));
+        userDTO.setAttendingEvents(adminService.getAttendingEvents(user));
         return userDTO;
     }
 
     @PutMapping("/users/{userID}")
     @ResponseStatus(HttpStatus.OK)
-    public FullUserDTO setUserAdmin(@PathVariable String userID) {
+    public FullUserDTO setUserAdmin(@PathVariable String userID,
+                                    @RequestBody boolean isAdmin) {
 
         UserModel user = userServices.findByID(userID);
-        return userMapper.toFullDTO(adminService.setUserAdmin(user));
+        return userMapper.toFullDTO(adminService.setUserAdmin(user, isAdmin));
     }
 
     @DeleteMapping("/user/{userId}")

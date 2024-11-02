@@ -9,6 +9,7 @@ public class FullUserDTO {
     private String profilePicture;
     private boolean isAdmin;
     private List<DisplayEventDTO> createdEvents;
+    private List<DisplayEventDTO> attendingEvents;
 
     public FullUserDTO() {
     }
@@ -17,14 +18,15 @@ public class FullUserDTO {
         this.isAdmin = isAdmin;
     }
 
-    public FullUserDTO(String userID, String username, String email, String profilePicture,
-                       boolean isAdmin, List<DisplayEventDTO> createdEvents) {
+    public FullUserDTO(String userID, String username, String email, String profilePicture, boolean isAdmin,
+                       List<DisplayEventDTO> createdEvents, List<DisplayEventDTO> attendingEvents) {
         this.userID = userID;
         this.username = username;
         this.email = email;
         this.profilePicture = profilePicture;
         this.isAdmin = isAdmin;
         this.createdEvents = createdEvents;
+        this.attendingEvents = attendingEvents;
     }
 
     public String getUserID() {
@@ -73,5 +75,13 @@ public class FullUserDTO {
 
     public void setCreatedEvents(List<DisplayEventDTO> createdEvents) {
         this.createdEvents = createdEvents;
+    }
+
+    public List<DisplayEventDTO> getAttendingEvents() {
+        return attendingEvents;
+    }
+
+    public void setAttendingEvents(List<DisplayEventDTO> attendingEvents) {
+        this.attendingEvents = attendingEvents;
     }
 }

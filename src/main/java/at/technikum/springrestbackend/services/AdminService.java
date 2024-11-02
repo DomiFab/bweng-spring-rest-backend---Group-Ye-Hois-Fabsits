@@ -21,8 +21,8 @@ public class AdminService {
         this.eventMapper = eventMapper;
     }
 
-    public UserModel setUserAdmin(UserModel user) {
-        user.setAdmin(true);
+    public UserModel setUserAdmin(UserModel user, boolean isAdmin) {
+        user.setAdmin(isAdmin);
         return userRepository.save(user);
     }
 
@@ -34,6 +34,16 @@ public class AdminService {
         }
 
         return createdEvents;
+    }
+
+    public List<DisplayEventDTO> getAttendingEvents(UserModel user) {
+
+        List<DisplayEventDTO> attendingEvents = new ArrayList<>();
+        for (EventModel event : user.getAttendingEvents()){
+            attendingEvents.add(eventMapper.toDisplayDTO(event, user.getUserID()));
+        }
+
+        return attendingEvents;
     }
 
     public String deleteUser(Long userId) {
