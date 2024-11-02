@@ -46,6 +46,7 @@ public class CommentServices {
         return commentRepository.save(forumPostModel);
     }
 
+    @Transactional
     public CommentModel update(String eventID, String commentID, CreateCommentDTO commentDTO, String userID) {
 
         if (!idExists(commentID)) {
@@ -58,6 +59,10 @@ public class CommentServices {
 
         if (updatedComment.getEvent() != event) {
             throw new EntityNotFoundException("Event does not match the Comment's.");
+        }
+
+        if (commentDTO.isDeleteImage()) {
+            mediaRepository.deleteAllByComment(updatedComment);
         }
 
         updatedComment.setContent(commentDTO.getContent());

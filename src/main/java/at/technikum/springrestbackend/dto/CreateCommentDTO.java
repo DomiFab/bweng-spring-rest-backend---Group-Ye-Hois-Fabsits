@@ -4,6 +4,7 @@ public class CreateCommentDTO {
     private String title;
     private String content;
     private String replyToCommentID;
+    private boolean deleteImage;
 
     public CreateCommentDTO() {
     }
@@ -13,6 +14,13 @@ public class CreateCommentDTO {
         this.title = title;
         this.content = content;
         this.replyToCommentID = replyToCommentID;
+    }
+
+    public CreateCommentDTO(String title, String content, String replyToCommentID, boolean deleteImage) {
+        this.title = title;
+        this.content = content;
+        this.replyToCommentID = replyToCommentID;
+        this.deleteImage = deleteImage;
     }
 
     public String getTitle() {
@@ -39,4 +47,11 @@ public class CreateCommentDTO {
         this.replyToCommentID = replyToCommentID;
     }
 
+    public boolean isDeleteImage() {
+        return deleteImage;
+    }
+
+    public void setDeleteImage(boolean deleteImage) {
+        this.deleteImage = deleteImage;
+    }
 }
