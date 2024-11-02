@@ -170,8 +170,20 @@ public class UserServices {
                 !findByUsername(username).isAdmin()) {
             throw new AccessDeniedException("You do not have permission to delete this user.");
         }
+        for (MediaModel media : user.getUploadedMedia()) {
+            media.setUploader(null);
+            mediaRepository.save(media);
+        }
+        for (CommentModel comment : user.getCreatedComments()) {
+            comment.setAuthor(null);
+            commentRepository.save(comment);
+        }
         for (EventModel event : user.getCreatedEvents()) {
             event.setCreator(null);
+            eventRepository.save(event);
+        }
+        for (EventModel event : user.getAttendingEvents()) {
+            event.getAttendingUsers().remove(user);
             eventRepository.save(event);
         }
         userRepository.delete(user);
