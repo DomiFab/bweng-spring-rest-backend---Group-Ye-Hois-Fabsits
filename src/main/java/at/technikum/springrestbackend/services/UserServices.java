@@ -22,6 +22,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -72,6 +73,15 @@ public class UserServices {
 
     public List<UserModel> findAll (){
         return userRepository.findAll();
+    }
+
+    public List<UserDTO> getAttendees(EventModel event) {
+
+        List<UserDTO> attendees = new ArrayList<>();
+        for (UserModel user : event.getAttendingUsers()) {
+            attendees.add(userMapper.toSimpleDTO(user));
+        }
+        return attendees;
     }
 
     public UserModel save(UserModel userModel){

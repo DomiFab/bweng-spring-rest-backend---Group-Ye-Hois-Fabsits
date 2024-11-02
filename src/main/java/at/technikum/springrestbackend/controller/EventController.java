@@ -127,7 +127,7 @@ public class EventController {
     public List<UserDTO> getAttendees (@PathVariable String eventID) {
 
         EventModel event = eventServices.find(eventID);
-        return eventServices.getAttendees(event);
+        return userServices.getAttendees(event);
     }
 
     @PutMapping("/{eventID}/join")

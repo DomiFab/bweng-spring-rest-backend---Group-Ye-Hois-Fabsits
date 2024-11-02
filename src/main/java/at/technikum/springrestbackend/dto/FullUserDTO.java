@@ -1,20 +1,30 @@
 package at.technikum.springrestbackend.dto;
 
-public class UserDTO {
+import java.util.List;
+
+public class FullUserDTO {
     private String userID;
     private String username;
     private String email;
     private String profilePicture;
+    private boolean isAdmin;
+    private List<DisplayEventDTO> createdEvents;
 
-    public UserDTO() {
+    public FullUserDTO() {
     }
 
-    //GET,PUT UserDashboardDTO
-    public UserDTO(String userID, String username, String email, String profilePicture) {
+    public FullUserDTO(boolean isAdmin) {
+        this.isAdmin = isAdmin;
+    }
+
+    public FullUserDTO(String userID, String username, String email, String profilePicture,
+                       boolean isAdmin, List<DisplayEventDTO> createdEvents) {
         this.userID = userID;
         this.username = username;
         this.email = email;
         this.profilePicture = profilePicture;
+        this.isAdmin = isAdmin;
+        this.createdEvents = createdEvents;
     }
 
     public String getUserID() {
@@ -33,7 +43,6 @@ public class UserDTO {
         this.username = username;
     }
 
-
     public String getEmail() {
         return email;
     }
@@ -50,4 +59,19 @@ public class UserDTO {
         this.profilePicture = profilePicture;
     }
 
+    public boolean isAdmin() {
+        return isAdmin;
+    }
+
+    public void setAdmin(boolean admin) {
+        isAdmin = admin;
+    }
+
+    public List<DisplayEventDTO> getCreatedEvents() {
+        return createdEvents;
+    }
+
+    public void setCreatedEvents(List<DisplayEventDTO> createdEvents) {
+        this.createdEvents = createdEvents;
+    }
 }

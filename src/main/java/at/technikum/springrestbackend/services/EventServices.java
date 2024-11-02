@@ -7,7 +7,6 @@ import at.technikum.springrestbackend.exception.UserAlreadyJoinedException;
 import at.technikum.springrestbackend.mapper.CommentMapper;
 import at.technikum.springrestbackend.mapper.EventMapper;
 import at.technikum.springrestbackend.mapper.MediaMapper;
-import at.technikum.springrestbackend.mapper.UserMapper;
 import at.technikum.springrestbackend.model.CommentModel;
 import at.technikum.springrestbackend.model.EventModel;
 import at.technikum.springrestbackend.model.MediaModel;
@@ -32,8 +31,6 @@ public class EventServices {
     private final UserRepository userRepository;
     private final CommentMapper commentMapper;
     private final MediaMapper mediaMapper;
-    @Autowired
-    private UserMapper userMapper;
     private final CommentRepository commentRepository;
     private final MediaRepository mediaRepository;
 
@@ -90,15 +87,6 @@ public class EventServices {
 
     public Integer getCommentCount(EventModel event) {
         return event.getEventComments().size();
-    }
-
-    public List<UserDTO> getAttendees(EventModel event) {
-
-        List<UserDTO> attendees = new ArrayList<>();
-        for (UserModel user : event.getAttendingUsers()) {
-            attendees.add(userMapper.toSimpleDTO(user));
-        }
-        return attendees;
     }
 
     public Integer getAttendingCount(EventModel event) {

@@ -2,10 +2,12 @@ package at.technikum.springrestbackend.controller;
 
 import at.technikum.springrestbackend.dto.CreateEventDTO;
 import at.technikum.springrestbackend.dto.CreateCommentDTO;
+import at.technikum.springrestbackend.dto.FullUserDTO;
 import at.technikum.springrestbackend.dto.UserDTO;
 import at.technikum.springrestbackend.mapper.EventMapper;
 import at.technikum.springrestbackend.mapper.CommentMapper;
 import at.technikum.springrestbackend.mapper.UserMapper;
+import at.technikum.springrestbackend.model.UserModel;
 import at.technikum.springrestbackend.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -65,9 +67,28 @@ public class AdminController {
     @ResponseStatus(HttpStatus.OK)
     public List<UserDTO> readAll() {
         return userServices.findAll().stream()
-                .map(userMapper::toFullDTO)
+                .map(userMapper::toSimpleDTO)
                 .collect(Collectors.toList());
     }
+
+    @GetMapping("/users/{userID}")
+    @ResponseStatus(HttpStatus.OK)
+    public FullUserDTO readFullUser(@PathVariable String userID) {
+
+        UserModel user = userServices.findByID(userID);
+        FullUserDTO userDTO = userMapper.toFullDTO(user);
+        userDTO.setCreatedEvents(adminService.getCreatedEventsByUser(user));
+        return userDTO;
+    }
+
+    @PutMapping("/users/{userID}")
+    @ResponseStatus(HttpStatus.OK)
+    public FullUserDTO setUserAdmin(@PathVariable String userID) {
+
+        UserModel user = userServices.findByID(userID);
+        return userMapper.toFullDTO(adminService.setUserAdmin(user));
+    }
+
     @DeleteMapping("/user/{userId}")
     public String deleteUser(@PathVariable Long userId) {
         return adminService.deleteUser(userId);

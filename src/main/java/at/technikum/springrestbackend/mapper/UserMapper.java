@@ -1,5 +1,6 @@
 package at.technikum.springrestbackend.mapper;
 
+import at.technikum.springrestbackend.dto.FullUserDTO;
 import at.technikum.springrestbackend.dto.RegisterDTO;
 import at.technikum.springrestbackend.dto.UserDTO;
 import at.technikum.springrestbackend.model.UserModel;
@@ -37,28 +38,16 @@ public class UserMapper {
         );
     }
 
-    public UserDTO toFullDTO(UserModel user) {
-//        UserDTO displayedUser = new UserDTO();
-//        for (EventModel event : user.getAttendingEvents()){
-//            displayedUser.getAttendingEvents().add(eventUtility.convertToDTO(event));
-//        }
-//        for (EventModel event : user.getCreatedEvents()){
-//            displayedUser.getCreatedEvents().add(eventUtility.convertToDTO(event));
-//        }
-//        for (MediaModel media : user.getUploadedMedia()){
-//            displayedUser.getUploadedMedia().add(new MediaDTO(media.getMediaID(), media.getFileLocation(),
-//                    media.getEvent().getEventID(),
-//                    userUtility.toSimpleDTO(media.getUploader()),
-//                    media.isFrontPic()
-//                    )
-//            );
-//        }
-        return new UserDTO(
-//                user.getUserID(), user.getUsername(),
-//                user.getEmail(),user.getProfileDescription(),
-//                user.getProfilePicture(), displayedUser.getAttendingEvents(),
-//                displayedUser.getCreatedEvents(), displayedUser.getUploadedMedia()
-        );
+    public FullUserDTO toFullDTO(UserModel user) {
+
+        FullUserDTO displayedUser = new FullUserDTO(user.isAdmin());
+
+        displayedUser.setUserID(user.getUserID());
+        displayedUser.setEmail(user.getEmail());
+        displayedUser.setUsername(user.getUsername());
+        displayedUser.setProfilePicture(user.getProfilePicture());
+
+        return displayedUser;
     }
 
 }
