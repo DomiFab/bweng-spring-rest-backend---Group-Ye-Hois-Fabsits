@@ -4,7 +4,6 @@ import at.technikum.springrestbackend.dto.CreateCommentDTO;
 import at.technikum.springrestbackend.exception.EntityNotFoundException;
 import at.technikum.springrestbackend.model.CommentModel;
 import at.technikum.springrestbackend.model.EventModel;
-import at.technikum.springrestbackend.model.MediaModel;
 import at.technikum.springrestbackend.model.UserModel;
 import at.technikum.springrestbackend.repository.CommentRepository;
 import at.technikum.springrestbackend.repository.MediaRepository;
@@ -12,6 +11,7 @@ import jakarta.persistence.EntityExistsException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -65,6 +65,7 @@ public class CommentServices {
         return save(updatedComment);
     }
 
+    @Transactional
     public CommentModel delete(String eventID, String commentID, String userID){
 
         CommentModel comment = find(commentID);
@@ -77,10 +78,11 @@ public class CommentServices {
 
         isTrulyAuthorized(comment, event, user);
 
-        List<MediaModel> mediaList = comment.getMedia().stream().toList();
-        if (!mediaList.isEmpty()) {
-            mediaRepository.delete(mediaList.getFirst());
-        }
+//        List<MediaModel> mediaList = comment.getMedia().stream().toList();
+//        if (!mediaList.isEmpty()) {
+//            mediaRepository.delete(mediaList.getFirst());
+//        }
+        mediaRepository.deleteAllByComment(comment);
 
         comment.setContent("");
         comment.setDeleted(true);

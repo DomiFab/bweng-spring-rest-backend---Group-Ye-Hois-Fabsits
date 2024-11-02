@@ -16,6 +16,7 @@ import jakarta.persistence.EntityExistsException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
 import java.util.ArrayList;
@@ -163,6 +164,7 @@ public class EventServices {
         }
     }
 
+    @Transactional
     public EventModel deleteFinal(String eventID, String userID) {
         //find event by ID
         EventModel event = find(eventID);
@@ -173,10 +175,8 @@ public class EventServices {
             userRepository.save(user);
         }
 
-        commentRepository.deleteAllByEvent(event);
         mediaRepository.deleteAllByEvent(event);
-//        event.getCreator().getCreatedEvents().remove(event);
-//        userRepository.save(event.getCreator());
+        commentRepository.deleteAllByEvent(event);
         eventRepository.delete(event);
         return event;
     }
