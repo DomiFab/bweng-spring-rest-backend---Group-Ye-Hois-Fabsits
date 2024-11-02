@@ -144,18 +144,6 @@ public class UserServices {
         }
     }
 
-    public void addCreatedEvent(UserModel user, EventModel event) {
-        user.getCreatedEvents().add(event);
-        save(user);
-    }
-
-    public void addCreatedComment(UserModel user, CommentModel comment) {
-        UserModel actualUser = userRepository.findById(user.getUserID()).orElseThrow();
-        CommentModel actualComment = commentRepository.findById(comment.getCommentID()).orElseThrow();
-        actualUser.getCreatedComments().add(actualComment);
-        save(user);
-    }
-
     public ResponseEntity<?> changePassword (ResetPasswordDTO resetPasswordDTO){
         // Get the current authenticated user
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

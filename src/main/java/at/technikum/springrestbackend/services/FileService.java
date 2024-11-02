@@ -113,6 +113,8 @@ public class FileService {
             deleteFile(userModel.getProfilePicture().replace("http://localhost:9000/files", ""));
         }
         if (file == null || file.isEmpty()) {
+            userModel.setProfilePicture("");
+            userRepository.save(userModel);
             return;
         }
         // Upload the new file
